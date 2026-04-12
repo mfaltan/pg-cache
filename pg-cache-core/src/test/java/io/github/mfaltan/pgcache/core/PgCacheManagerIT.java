@@ -86,6 +86,21 @@ class PgCacheManagerIT {
         assertThat(actual).isEqualTo(valueToBeCached);
     }
 
+    @ParameterizedTest
+    @MethodSource("valuesToBeCached")
+    void should_cache_object_then_evict_then_return_null(Object valueToBeCached, Class<?> clazz) {
+
+        //when
+        var cache1 = pgCacheManager.getCache(CACHE_1);
+        assert cache1 != null;
+        cache1.put(SOME_KEY, valueToBeCached);
+        cache1.evict(SOME_KEY);
+        var actual = cache1.get(SOME_KEY, clazz);
+
+        //then
+        assertThat(actual).isNull();
+    }
+
     static Stream<Object> simpleValuesToBeCached() {
         return Stream.of(SOME_VALUE, 1, null);
     }

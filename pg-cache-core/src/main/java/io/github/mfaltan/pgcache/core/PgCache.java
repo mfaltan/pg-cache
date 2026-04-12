@@ -78,7 +78,9 @@ public class PgCache implements Cache {
 
     @Override
     public void evict(Object key) {
-        store.remove(key);
+        byte[] normalizedKey = normalizeKey(key);
+        Long longKey = generateKey(normalizedKey);
+        store.remove(longKey);
     }
 
     @Override
