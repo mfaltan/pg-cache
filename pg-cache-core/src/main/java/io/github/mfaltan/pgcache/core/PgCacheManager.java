@@ -24,7 +24,10 @@ public class PgCacheManager implements CacheManager {
                 if (caches.containsKey(name)) {
                     return caches.get(name);
                 }
-                var cache = new PgCache(name, serializer);
+                var cache = PgCache.builder()
+                                   .name(name)
+                                   .serializer(serializer)
+                                   .build();
                 caches.put(name, cache);
                 return cache;
             }

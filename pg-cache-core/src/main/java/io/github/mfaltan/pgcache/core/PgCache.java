@@ -2,6 +2,8 @@ package io.github.mfaltan.pgcache.core;
 
 import com.google.common.hash.Hashing;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 
@@ -9,7 +11,9 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Builder
 @RequiredArgsConstructor
+@EqualsAndHashCode(exclude = "store")
 public class PgCache implements Cache {
     private final String name;
     private final ValueSerializer serializer;
