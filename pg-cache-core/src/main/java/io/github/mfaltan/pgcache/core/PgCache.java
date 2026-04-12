@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Builder
 @RequiredArgsConstructor
 @EqualsAndHashCode(exclude = "store")
-public class PgCache implements Cache {
+public class PgCache implements Cache, TypedCache {
     private final String name;
     private final ValueSerializer serializer;
     private final ConcurrentHashMap<Long, CacheEntry> store = new ConcurrentHashMap<>();
@@ -34,7 +34,7 @@ public class PgCache implements Cache {
         CacheEntry data = getCacheEntry(key);
         if (data == null) return null;
 
-        Object value = serializer.deserialize(data.value(), Object.class);
+        Object value = serializer.deserialize(data.value(), data.type());
         return () -> value;
     }
 
@@ -73,9 +73,12 @@ public class PgCache implements Cache {
 
         byte[] serializedValue = serializer.serialize(value);
 
+        var type = keyToKeyEntry(key).type();
         var entry = CacheEntry.builder()
                               .normalizedKey(normalizedKey)
-                              .value(serializedValue).build();
+                              .value(serializedValue)
+                              .type(type)
+                              .build();
 
         store.put(longKey, entry);
     }
@@ -99,7 +102,16 @@ public class PgCache implements Cache {
     }
 
     private byte[] normalizeKey(Object key) {
-        return serializer.serialize(key);
+        var keyEntry = keyToKeyEntry(key);
+        return serializer.serialize(keyEntry.rawKey());
+    }
+
+    private KeyEntry keyToKeyEntry(Object key) {
+        if (key instanceof KeyEntry) {
+            return (KeyEntry) key;
+        } else {
+            throw new IllegalArgumentException("Provided key is not KeyEntry");
+        }
     }
 
     private CacheEntry getCacheEntry(Object key) {

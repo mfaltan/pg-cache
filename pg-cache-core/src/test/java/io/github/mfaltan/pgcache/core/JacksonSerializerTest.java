@@ -1,7 +1,9 @@
 package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.github.mfaltan.pgcache.core.exception.PgCacheDeserializationException;
 import io.github.mfaltan.pgcache.core.exception.PgCacheSerializationException;
 import org.junit.jupiter.api.Test;
@@ -11,8 +13,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -21,13 +25,22 @@ class JacksonSerializerTest {
 
     private static final String VALUE = "test-value";
     private static final byte[] BYTES = new byte[]{1, 2, 3};
-    private static final Class<String> TYPE = String.class;
+    private static final Class<String> CLAZZ = String.class;
 
     @InjectMocks
     private JacksonSerializer serializer;
 
     @Mock
     private ObjectMapper mapper;
+
+    @Mock
+    private TypeFactory typeFactory;
+
+    @Mock
+    private JavaType javaType;
+
+    @Mock
+    private Type type;
 
     @Test
     void should_serialize_value() throws Exception {
@@ -57,10 +70,25 @@ class JacksonSerializerTest {
     @Test
     void should_deserialize_value() throws Exception {
         // GIVEN
-        when(mapper.readValue(BYTES, TYPE)).thenReturn(VALUE);
+        when(mapper.readValue(BYTES, CLAZZ)).thenReturn(VALUE);
 
         // WHEN
-        var result = serializer.deserialize(BYTES, TYPE);
+        var result = serializer.deserialize(BYTES, CLAZZ);
+
+        // THEN
+        assertThat(result).isEqualTo(VALUE);
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test
+    void should_deserialize_typed_value() throws Exception {
+        // GIVEN
+        when(mapper.getTypeFactory()).thenReturn(typeFactory);
+        when(typeFactory.constructType(type)).thenReturn(javaType);
+        when(mapper.readValue(BYTES, javaType)).thenReturn(VALUE);
+
+        // WHEN
+        var result = serializer.deserialize(BYTES, type);
 
         // THEN
         assertThat(result).isEqualTo(VALUE);
@@ -80,10 +108,24 @@ class JacksonSerializerTest {
     @Test
     void should_throw_exception_when_deserialization_fails() throws Exception {
         // GIVEN
-        when(mapper.readValue(BYTES, TYPE)).thenThrow(IOException.class);
+        when(mapper.readValue(BYTES, CLAZZ)).thenThrow(IOException.class);
 
         // WHEN / THEN
-        assertThatThrownBy(() -> serializer.deserialize(BYTES, TYPE))
+        assertThatThrownBy(() -> serializer.deserialize(BYTES, CLAZZ))
+                .isInstanceOf(PgCacheDeserializationException.class);
+
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test
+    void should_throw_exception_when_typed_deserialization_fails() throws Exception {
+        // GIVEN
+        when(mapper.getTypeFactory()).thenReturn(typeFactory);
+        when(typeFactory.constructType(type)).thenReturn(javaType);
+        when(mapper.readValue(BYTES, javaType)).thenThrow(IOException.class);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> serializer.deserialize(BYTES, type))
                 .isInstanceOf(PgCacheDeserializationException.class);
 
         verifyNoMoreInteractions(mapper);
