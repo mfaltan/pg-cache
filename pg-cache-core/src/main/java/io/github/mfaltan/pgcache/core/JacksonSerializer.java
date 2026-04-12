@@ -1,12 +1,14 @@
 package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.core.exception.PgCacheDeserializationException;
 import io.github.mfaltan.pgcache.core.exception.PgCacheSerializationException;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 @RequiredArgsConstructor
 public class JacksonSerializer implements ValueSerializer {
@@ -25,6 +27,16 @@ public class JacksonSerializer implements ValueSerializer {
     public <T> T deserialize(byte[] bytes, Class<T> type) {
         try {
             return type != null ? mapper.readValue(bytes, type) : null;
+        } catch (IOException e) {
+            throw new PgCacheDeserializationException(e);
+        }
+    }
+
+    @Override
+    public <T> T deserialize(byte[] bytes, Type type) {
+        JavaType javaType = mapper.getTypeFactory().constructType(type);
+        try {
+            return mapper.readValue(bytes, javaType);
         } catch (IOException e) {
             throw new PgCacheDeserializationException(e);
         }
