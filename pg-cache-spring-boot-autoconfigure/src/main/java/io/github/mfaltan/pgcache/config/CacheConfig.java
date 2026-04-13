@@ -17,13 +17,6 @@ import org.springframework.context.annotation.Role;
 public class CacheConfig extends AbstractCachingConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean
-    ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
-
-
-    @Bean
     StoreFactory storeFactory(){
         return new RamStoreFactory();
     }
