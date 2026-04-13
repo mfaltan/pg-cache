@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 
@@ -15,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PgCacheManagerTest {
@@ -26,7 +28,13 @@ class PgCacheManagerTest {
     private PgCacheManager cacheManager;
 
     @Mock
+    private StoreFactory storeFactory;
+
+    @Mock
     private ValueSerializer serializer;
+
+    @Mock
+    private Store store, store2;
 
     @Test
     void should_create_new_cache_when_does_not_exist() {
@@ -34,7 +42,10 @@ class PgCacheManagerTest {
         var expectedCache = PgCache.builder()
                                    .name(CACHE_NAME_1)
                                    .serializer(serializer)
+                                   .store(store)
                                    .build();
+
+        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
 
         // WHEN
         var actual = cacheManager.getCache(CACHE_NAME_1);
@@ -49,7 +60,10 @@ class PgCacheManagerTest {
         var expectedCache = PgCache.builder()
                                    .name(CACHE_NAME_1)
                                    .serializer(serializer)
+                                   .store(store)
                                    .build();
+
+        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
 
         // WHEN
         var first = cacheManager.getCache(CACHE_NAME_1);
@@ -58,10 +72,15 @@ class PgCacheManagerTest {
         // THEN
         assertThat(second).isSameAs(first);
         assertThat(first).isEqualTo(expectedCache);
+        verify(storeFactory, times(1)).initializeStore(any());
     }
 
     @Test
     void should_create_different_caches_for_different_names() {
+        // GIVEN
+        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
+        when(storeFactory.initializeStore(CACHE_NAME_2)).thenReturn(store2);
+
         // WHEN
         var cache1 = cacheManager.getCache(CACHE_NAME_1);
         var cache2 = cacheManager.getCache(CACHE_NAME_2);
@@ -90,8 +109,10 @@ class PgCacheManagerTest {
     @Test
     void should_create_only_one_cache_concurrently() throws Exception {
 
+        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
+
         int threads = 20;
-        try(ExecutorService executor = Executors.newFixedThreadPool(threads)) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
 
             CountDownLatch start = new CountDownLatch(1);
             CountDownLatch done = new CountDownLatch(threads);
@@ -115,6 +136,7 @@ class PgCacheManagerTest {
             done.await();
 
             assertThat(results).hasSize(1);
+            verify(storeFactory, times(1)).initializeStore(any());
         }
     }
 }

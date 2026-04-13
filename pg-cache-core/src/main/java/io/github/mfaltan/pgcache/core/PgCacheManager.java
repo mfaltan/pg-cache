@@ -12,6 +12,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PgCacheManager implements CacheManager {
 
+    private final StoreFactory storeFactory;
     private final ValueSerializer serializer;
     private final Map<String, Cache> caches = new HashMap<>();
 
@@ -24,9 +25,12 @@ public class PgCacheManager implements CacheManager {
                 if (caches.containsKey(name)) {
                     return caches.get(name);
                 }
+                var store = storeFactory.initializeStore(name);
+
                 var cache = PgCache.builder()
                                    .name(name)
                                    .serializer(serializer)
+                                   .store(store)
                                    .build();
                 caches.put(name, cache);
                 return cache;
