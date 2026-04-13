@@ -9,7 +9,6 @@ import org.springframework.cache.Cache;
 
 import java.util.Arrays;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Builder
 @RequiredArgsConstructor
@@ -17,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PgCache implements Cache, TypedCache {
     private final String name;
     private final ValueSerializer serializer;
-    private final ConcurrentHashMap<Long, CacheEntry> store = new ConcurrentHashMap<>();
+    private final Store store;
 
     @Override
     public String getName() {

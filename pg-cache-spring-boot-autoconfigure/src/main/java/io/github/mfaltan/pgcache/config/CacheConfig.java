@@ -1,10 +1,7 @@
 package io.github.mfaltan.pgcache.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.mfaltan.pgcache.core.JacksonSerializer;
-import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
-import io.github.mfaltan.pgcache.core.PgCacheManager;
-import io.github.mfaltan.pgcache.core.ValueSerializer;
+import io.github.mfaltan.pgcache.core.*;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.CacheManager;
@@ -25,6 +22,12 @@ public class CacheConfig extends AbstractCachingConfiguration {
         return new ObjectMapper();
     }
 
+
+    @Bean
+    StoreFactory storeFactory(){
+        return new RamStoreFactory();
+    }
+
     @Bean
     @ConditionalOnMissingBean
     ValueSerializer valueSerializer(ObjectMapper objectMapper) {
@@ -32,10 +35,9 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean("pgCacheManager")
-    CacheManager cacheManager(ValueSerializer valueSerializer) {
-        return new PgCacheManager(valueSerializer);
+    CacheManager cacheManager(StoreFactory storeFactory, ValueSerializer valueSerializer) {
+        return new PgCacheManager(storeFactory, valueSerializer);
     }
-
 
     @Bean("pgCacheInterceptor")
     @Primary

@@ -23,11 +23,12 @@ class PgCacheManagerIT {
     private PgCacheManager pgCacheManager;
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final RamStoreFactory storeFactory = new RamStoreFactory();
     private final ValueSerializer serializer = new JacksonSerializer(mapper);
 
     @BeforeEach
     void init() {
-        pgCacheManager = new PgCacheManager(serializer);
+        pgCacheManager = new PgCacheManager(storeFactory, serializer);
     }
 
     @Test
