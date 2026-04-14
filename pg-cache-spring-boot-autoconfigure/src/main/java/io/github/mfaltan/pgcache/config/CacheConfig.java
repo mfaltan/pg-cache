@@ -17,13 +17,24 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Role;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 
 @Configuration
 @EnableConfigurationProperties(PgCacheProperties.class)
 public class CacheConfig extends AbstractCachingConfiguration {
 
+    @Bean
+    CurrentDateTimeProvider currentDateTimeProvider() {
+        return LocalDateTime::now;
+    }
+
+    @Bean
+    public DataSource pgCacheUserDataSource(PgCacheProperties properties) {
+        return HikariDataSourceFactory.create(properties.getUserDataSource());
+    }
+
     @Bean(name = "pgCacheAdminDataSource")
-    public DataSource pgCacheAdminDataSource(PgCacheProperties properties) {
+    DataSource pgCacheAdminDataSource(PgCacheProperties properties) {
         PgCacheProperties.DataSourceProperties props = properties.getAdminDatasource();
         PGSimpleDataSource ds = new org.postgresql.ds.PGSimpleDataSource();
         ds.setURL(props.getUrl());
@@ -34,10 +45,15 @@ public class CacheConfig extends AbstractCachingConfiguration {
 
     @Bean
     StoreFactory storeFactory(PgCacheProperties properties,
-                              @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource){
+                              @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
+                              @Qualifier("pgCacheUserDataSource") DataSource userDataSource,
+                              CurrentDateTimeProvider currentDateTimeProvider) {
+
         return PgStoreFactory.builder()
                              .adminDataSource(adminDataSource)
+                             .userDataSource(userDataSource)
                              .tableName(properties.getTableName())
+                             .timeProvider(currentDateTimeProvider)
                              .build();
     }
 
@@ -55,7 +71,7 @@ public class CacheConfig extends AbstractCachingConfiguration {
     @Bean("pgCacheInterceptor")
     @Primary
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public CacheInterceptor cacheInterceptor(CacheOperationSource cacheOperationSource) {
+    CacheInterceptor cacheInterceptor(CacheOperationSource cacheOperationSource) {
         CacheInterceptor interceptor = new PgCacheInterceptor();
         interceptor.configure(this.errorHandler, this.keyGenerator, this.cacheResolver, this.cacheManager);
         interceptor.setCacheOperationSource(cacheOperationSource);

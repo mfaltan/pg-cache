@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Statement;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -21,7 +22,10 @@ class PgStoreFactoryTest {
     private  PgStoreFactory factory;
 
     @Mock
-    DataSource adminDataSource;
+    DataSource adminDataSource, userDataStore;
+
+    @Mock
+    CurrentDateTimeProvider timeProvider;
 
     @Mock
     Connection connection;
@@ -31,18 +35,38 @@ class PgStoreFactoryTest {
 
     @BeforeEach
     void init() {
-        factory = new PgStoreFactory(adminDataSource, NAME);
+        factory = new PgStoreFactory(adminDataSource, userDataStore, NAME, timeProvider);
     }
+
     @Test
-    void shouldCreateTableAndIndex() throws Exception {
-        // given
+    void should_return_expected_store() {
+        // GIVEN
+        var cacheName = "cache1";
+        var expected = PgStore.builder()
+                                     .dataSource(userDataStore)
+                                     .timeProvider(timeProvider)
+                                     .cacheName(cacheName)
+                                     .tableName(NAME)
+                                     .ttlSeconds(60)
+                                     .build();
+
+        // WHEN
+        var actual = factory.initializeStore(cacheName);
+
+        // THEN
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void should_create_table_and_index() throws Exception {
+        // GIVEN
         when(adminDataSource.getConnection()).thenReturn(connection);
         when(connection.createStatement()).thenReturn(statement);
 
-        // when
+        // WHEN
         factory.init();
 
-        // then
+        // THEN
         verify(statement, times(1)).execute(contains("CREATE UNLOGGED TABLE IF NOT EXISTS cache_data"));
         verify(statement, times(1)).execute(contains("CREATE INDEX IF NOT EXISTS idx_cache_data_expires_at"));
 
