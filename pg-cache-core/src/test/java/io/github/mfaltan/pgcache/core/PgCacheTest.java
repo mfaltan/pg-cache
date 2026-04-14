@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,10 +24,8 @@ class PgCacheTest {
     private static final Long SOME_LONG_KEY = 1L;
     private static final String CACHE_NAME = "test-cache";
     private static final String SOME_KEY = "someKey";
-    private static final String SOME_OTHER_KEY = "someOtherKey";
     private static final String SOME_VALUE = "someValue";
     private static final byte[] KEY_BYTES = "key1-normalized".getBytes();
-    private static final byte[] OTHER_KEY_BYTES = "key2-normalized".getBytes();
     private static final byte[] VALUE_BYTES = "value1-serialized".getBytes();
 
     private PgCache cache;
@@ -43,7 +40,7 @@ class PgCacheTest {
     private Callable<String> loader;
 
     @Mock
-    private KeyEntry someKey, someOtherKey;
+    private KeyEntry someKey;
 
     @Mock
     private Type type;
@@ -89,7 +86,7 @@ class PgCacheTest {
         when(store.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
         when(cacheEntry.value()).thenReturn(VALUE_BYTES);
         when(cacheEntry.normalizedKey()).thenReturn(KEY_BYTES);
-        when(cacheEntry.type()).thenReturn(type);
+        when(someKey.type()).thenReturn(type);
 
         try (MockedStatic<Hashing> hashing = mockStatic(Hashing.class)) {
 
@@ -204,9 +201,8 @@ class PgCacheTest {
     @Test
     void should_load_value_with_callable_and_cache_it() throws Exception {
         // GIVEN
-        var cacheEntry = createCacheEntry(KEY_BYTES, VALUE_BYTES, type);
+        var cacheEntry = createCacheEntry(KEY_BYTES, VALUE_BYTES);
         when(someKey.rawKey()).thenReturn(SOME_KEY);
-        when(someKey.type()).thenReturn(type);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.serialize(SOME_VALUE)).thenReturn(VALUE_BYTES);
 
@@ -234,7 +230,7 @@ class PgCacheTest {
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(store.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
-        when(cacheEntry.type()).thenReturn(type);
+        when(someKey.type()).thenReturn(type);
         when(cacheEntry.value()).thenReturn(VALUE_BYTES);
         when(cacheEntry.normalizedKey()).thenReturn(KEY_BYTES);
         when(serializer.deserialize(VALUE_BYTES, type)).thenReturn(SOME_VALUE);
@@ -282,11 +278,10 @@ class PgCacheTest {
         assertThatThrownBy(()->cache.get("wrongKey")).isExactlyInstanceOf(IllegalArgumentException.class);
     }
 
-    private static CacheEntry createCacheEntry(byte[] normalizedKey, byte[] serializedValue, Type type) {
+    private static CacheEntry createCacheEntry(byte[] normalizedKey, byte[] serializedValue) {
         return CacheEntry.builder()
                          .normalizedKey(normalizedKey)
                          .value(serializedValue)
-                         .type(type)
                          .build();
 
     }

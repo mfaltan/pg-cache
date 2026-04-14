@@ -13,13 +13,26 @@ import java.sql.Statement;
 @RequiredArgsConstructor
 @Builder
 @Slf4j
-public class PgStoreFactory extends RamStoreFactory implements StoreFactory {
+public class PgStoreFactory implements StoreFactory {
     private final DataSource adminDataSource;
+    private final DataSource userDataSource;
     private final String tableName;
+    private final CurrentDateTimeProvider timeProvider;
 
     @PostConstruct
     public void init() throws Exception {
         createTableIfNotExists();
+    }
+
+    @Override
+    public Store initializeStore(String name) {
+        return PgStore.builder()
+                      .dataSource(userDataSource)
+                      .timeProvider(timeProvider)
+                      .cacheName(name)
+                      .tableName(tableName)
+                      .ttlSeconds(60)
+                      .build();
     }
 
     private void createTableIfNotExists() throws SQLException {

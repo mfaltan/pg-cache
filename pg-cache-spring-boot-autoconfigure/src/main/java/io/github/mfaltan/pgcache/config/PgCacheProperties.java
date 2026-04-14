@@ -23,6 +23,7 @@ public class PgCacheProperties {
      * Admin datasource (DDL, schema management)
      */
     private DataSourceProperties adminDatasource = new DataSourceProperties();
+    private final DataSourceProperties userDataSource = new DataSourceProperties();
 
     @Getter
     @Setter
@@ -31,5 +32,9 @@ public class PgCacheProperties {
         private String username;
         private String password;
         private String driverClassName = "org.postgresql.Driver";
+        private int maximumPoolSize = 10;
+        private long connectionTimeoutMs = 30000;
+        private long idleTimeoutMs = 600000;
+        private long maxLifetimeMs = 1800000;
     }
 }

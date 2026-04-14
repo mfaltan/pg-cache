@@ -30,16 +30,18 @@ public class PgCache implements Cache, TypedCache {
 
     @Override
     public ValueWrapper get(Object key) {
-        CacheEntry data = getCacheEntry(key);
+        var keyEntry = keyToKeyEntry(key);
+        CacheEntry data = getCacheEntry(keyEntry);
         if (data == null) return null;
 
-        Object value = serializer.deserialize(data.value(), data.type());
+        Object value = serializer.deserialize(data.value(), keyEntry.type());
         return () -> value;
     }
 
     @Override
     public <T> T get(Object key, Class<T> type) {
-        CacheEntry data = getCacheEntry(key);
+        var keyEntry = keyToKeyEntry(key);
+        CacheEntry data = getCacheEntry(keyEntry);
         if (data == null) {
             return null;
         } else {
@@ -67,16 +69,15 @@ public class PgCache implements Cache, TypedCache {
 
     @Override
     public void put(Object key, Object value) {
-        byte[] normalizedKey = normalizeKey(key);
+        var keyEntry = keyToKeyEntry(key);
+        byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
 
         byte[] serializedValue = serializer.serialize(value);
 
-        var type = keyToKeyEntry(key).type();
         var entry = CacheEntry.builder()
                               .normalizedKey(normalizedKey)
                               .value(serializedValue)
-                              .type(type)
                               .build();
 
         store.put(longKey, entry);
@@ -84,7 +85,8 @@ public class PgCache implements Cache, TypedCache {
 
     @Override
     public void evict(Object key) {
-        byte[] normalizedKey = normalizeKey(key);
+        var keyEntry = keyToKeyEntry(key);
+        byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
         store.remove(longKey);
     }
@@ -100,8 +102,7 @@ public class PgCache implements Cache, TypedCache {
                       .asLong();
     }
 
-    private byte[] normalizeKey(Object key) {
-        var keyEntry = keyToKeyEntry(key);
+    private byte[] normalizeKey(KeyEntry keyEntry) {
         return serializer.serialize(keyEntry.rawKey());
     }
 
@@ -113,7 +114,7 @@ public class PgCache implements Cache, TypedCache {
         }
     }
 
-    private CacheEntry getCacheEntry(Object key) {
+    private CacheEntry getCacheEntry(KeyEntry key) {
         byte[] normalizedKey = normalizeKey(key);
         Long longKey = generateKey(normalizedKey);
 
