@@ -55,7 +55,11 @@ public class PgCacheManager implements CacheManager {
 
     @Scheduled(cron = "${pg-cache.cleanup-cron:0 */30 * * * *}")
     public void cleanupJob() {
-        if (cleanupEnabled && cleanupEnabledSupplier.get()) {
+        if (!cleanupEnabled) {
+            return;
+        }
+        var b = cleanupEnabledSupplier.get();
+        if (b != null && b) {
             caches.values().forEach(c -> c.evictExpired(cleanupLimit));
         }
     }
