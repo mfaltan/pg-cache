@@ -38,7 +38,8 @@ public class PgCacheProperties {
      * Admin datasource (DDL, schema management)
      */
     private DataSourceProperties adminDatasource = new DataSourceProperties();
-    private final DataSourceProperties userDataSource = new DataSourceProperties();
+    private final DataSourceProperties userReadDataSource = new DataSourceProperties();
+    private final DataSourceProperties userWriteDataSource = new DataSourceProperties();
 
     @Getter
     @Setter

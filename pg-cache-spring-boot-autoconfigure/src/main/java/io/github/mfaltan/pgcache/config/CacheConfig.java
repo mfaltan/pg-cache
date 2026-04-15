@@ -31,8 +31,13 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    public DataSource pgCacheUserDataSource(PgCacheProperties properties) {
-        return HikariDataSourceFactory.create(properties.getUserDataSource());
+    public DataSource pgCacheUserReadDataSource(PgCacheProperties properties) {
+        return HikariDataSourceFactory.create(properties.getUserReadDataSource());
+    }
+
+    @Bean
+    public DataSource pgCacheUserWriteDataSource(PgCacheProperties properties) {
+        return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
     }
 
     @Bean(name = "pgCacheAdminDataSource")
@@ -48,12 +53,14 @@ public class CacheConfig extends AbstractCachingConfiguration {
     @Bean
     StoreFactory storeFactory(PgCacheProperties properties,
                               @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
-                              @Qualifier("pgCacheUserDataSource") DataSource userDataSource,
+                              @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
+                              @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
                               CurrentDateTimeProvider currentDateTimeProvider) {
 
         return PgStoreFactory.builder()
                              .adminDataSource(adminDataSource)
-                             .userDataSource(userDataSource)
+                             .userReadDataSource(userReadDataSource)
+                             .userWriteDataSource(userWriteDataSource)
                              .tableName(properties.getTableName())
                              .defaultTtlSeconds(properties.getDefaultTtlSeconds())
                              .timeProvider(currentDateTimeProvider)

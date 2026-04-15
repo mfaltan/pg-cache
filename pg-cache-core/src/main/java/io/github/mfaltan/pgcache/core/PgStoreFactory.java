@@ -15,7 +15,8 @@ import java.sql.Statement;
 @Slf4j
 public class PgStoreFactory implements StoreFactory {
     private final DataSource adminDataSource;
-    private final DataSource userDataSource;
+    private final DataSource userReadDataSource;
+    private final DataSource userWriteDataSource;
     private final String tableName;
     private final CurrentDateTimeProvider timeProvider;
     private final int defaultTtlSeconds;
@@ -30,7 +31,8 @@ public class PgStoreFactory implements StoreFactory {
         var ttlSeconds = storeProperties != null ? storeProperties.getTtlSeconds() : null;
 
         return PgStore.builder()
-                      .dataSource(userDataSource)
+                      .readDataSource(userReadDataSource)
+                      .writeDataSource(userWriteDataSource)
                       .timeProvider(timeProvider)
                       .cacheName(name)
                       .tableName(tableName)

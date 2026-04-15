@@ -24,7 +24,7 @@ class PgStoreFactoryTest {
     private  PgStoreFactory factory;
 
     @Mock
-    DataSource adminDataSource, userDataStore;
+    DataSource adminDataSource, userReadDataStore, userWriteDataStore;
 
     @Mock
     CurrentDateTimeProvider timeProvider;
@@ -40,7 +40,7 @@ class PgStoreFactoryTest {
 
     @BeforeEach
     void init() {
-        factory = new PgStoreFactory(adminDataSource, userDataStore, TABLE_NAME, timeProvider, DEFAULT_TTL);
+        factory = new PgStoreFactory(adminDataSource, userReadDataStore, userWriteDataStore, TABLE_NAME, timeProvider, DEFAULT_TTL);
     }
 
     @Test
@@ -110,7 +110,8 @@ class PgStoreFactoryTest {
 
     private PgStore createStore(int expectedTtl) {
         return PgStore.builder()
-                      .dataSource(userDataStore)
+                      .readDataSource(userReadDataStore)
+                      .writeDataSource(userWriteDataStore)
                       .timeProvider(timeProvider)
                       .cacheName(CACHE_NAME)
                       .tableName(TABLE_NAME)
