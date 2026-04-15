@@ -18,8 +18,8 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 public class PgStore implements Store {
 
-    private final DataSource dataSource;
-
+    private final DataSource readDataSource;
+    private final DataSource writeDataSource;
     private final CurrentDateTimeProvider timeProvider;
     private final String tableName;
     private final String cacheName;
@@ -38,7 +38,7 @@ public class PgStore implements Store {
                     expires_at = EXCLUDED.expires_at
                 """.formatted(tableName);
 
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = writeDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, cacheName);
@@ -63,7 +63,7 @@ public class PgStore implements Store {
                 WHERE name = ? AND key = ? AND expires_at > ?
                 """.formatted(tableName);
 
-        try (var conn = dataSource.getConnection();
+        try (var conn = readDataSource.getConnection();
              var ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, cacheName);
@@ -95,7 +95,7 @@ public class PgStore implements Store {
                 WHERE name = ? AND key = ?
                 """.formatted(tableName);
 
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = writeDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, cacheName);
@@ -116,7 +116,7 @@ public class PgStore implements Store {
                 WHERE name = ?
                 """.formatted(tableName);
 
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = writeDataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, cacheName);

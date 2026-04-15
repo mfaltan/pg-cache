@@ -41,7 +41,8 @@ class SimplePgOperationsIT {
 
         var factory = PgStoreFactory.builder()
                                     .adminDataSource(dataSource)
-                                    .userDataSource(dataSource)
+                                    .userReadDataSource(dataSource)
+                                    .userWriteDataSource(dataSource)
                                     .tableName("cache_data")
                                     .timeProvider(LocalDateTime::now)
                                     .defaultTtlSeconds(20)

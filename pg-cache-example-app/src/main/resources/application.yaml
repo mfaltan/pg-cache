@@ -11,8 +11,14 @@ pg-cache:
     username: pgcache-admin
     password: pgcache-admin
 
-  user-datasource:
+  user-read-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache
     username: pgcache-user
     password: pgcache-user
     maximum-pool-size: 5
+
+  user-write-datasource:
+    url: jdbc:postgresql://localhost:5432/pgcache
+    username: pgcache-user
+    password: pgcache-user
+    maximum-pool-size: 2
