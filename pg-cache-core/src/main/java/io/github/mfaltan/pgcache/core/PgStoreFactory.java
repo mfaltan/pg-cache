@@ -1,6 +1,5 @@
 package io.github.mfaltan.pgcache.core;
 
-import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
 import io.github.mfaltan.pgcache.core.exception.PgStoreFactoryException;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
@@ -36,12 +35,29 @@ public class PgStoreFactory implements StoreFactory {
     public Store initializeStore(String name, StoreProperties storeProperties) {
         var ttlSeconds = storeProperties != null ? storeProperties.getTtlSeconds() : null;
 
+        String partitionName = tableName + "_" + name;
+        log.info("Initializing pg cache partition {}", partitionName);
+
+        String partitionSql = """
+                CREATE UNLOGGED TABLE IF NOT EXISTS %s
+                PARTITION OF %s
+                FOR VALUES IN ('%s')
+                """.formatted(partitionName, tableName, name);
+
+        try (Connection conn = adminDataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            stmt.execute(partitionSql);
+        } catch (SQLException e) {
+            throw new PgStoreFactoryException("Error when creating partition", e);
+        }
+
         return PgStore.builder()
                       .readDataSource(userReadDataSource)
                       .writeDataSource(userWriteDataSource)
                       .timeProvider(timeProvider)
                       .cacheName(name)
-                      .tableName(tableName)
+                      .tableName(partitionName)
                       .ttlSeconds(ttlSeconds != null ? ttlSeconds : defaultTtlSeconds)
                       .build();
     }
@@ -50,14 +66,14 @@ public class PgStoreFactory implements StoreFactory {
         log.info("Initializing pg cache table");
 
         String tableSql = """
-                CREATE UNLOGGED TABLE IF NOT EXISTS %s (
+                CREATE TABLE IF NOT EXISTS %s (
                     name TEXT NOT NULL,
                     key BIGINT NOT NULL,
                     raw_key BYTEA NOT NULL,
                     value BYTEA NOT NULL,
                     expires_at TIMESTAMP NOT NULL,
                     PRIMARY KEY (name, key)
-                )
+                )  PARTITION BY LIST (name)
                 """.formatted(tableName);
 
         String indexSql = """

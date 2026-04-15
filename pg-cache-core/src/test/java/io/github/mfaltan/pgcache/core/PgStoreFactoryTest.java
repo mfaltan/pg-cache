@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +22,7 @@ class PgStoreFactoryTest {
     private static final String CACHE_NAME = "cache1";
     private static final int DEFAULT_TTL = 30;
 
-    private  PgStoreFactory factory;
+    private PgStoreFactory factory;
 
     @Mock
     DataSource adminDataSource, userReadDataStore, userWriteDataStore;
@@ -44,21 +45,26 @@ class PgStoreFactoryTest {
     }
 
     @Test
-    void should_return_expected_store_with_default_ttl() {
+    void should_return_expected_store_with_default_ttl() throws SQLException {
         // GIVEN
         var expected = createStore(DEFAULT_TTL);
+        when(adminDataSource.getConnection()).thenReturn(connection);
+        when(connection.createStatement()).thenReturn(statement);
         when(storeProperties.getTtlSeconds()).thenReturn(null);
         // WHEN
         var actual = factory.initializeStore(CACHE_NAME, storeProperties);
 
         // THEN
         assertThat(actual).isEqualTo(expected);
+        verify(statement, times(1)).execute(contains("CREATE UNLOGGED TABLE IF NOT EXISTS cache_data_cache1"));
     }
 
     @Test
-    void should_return_expected_store_with_default_ttl_again() {
+    void should_return_expected_store_with_default_ttl_again() throws SQLException {
         // GIVEN
         var expected = createStore(DEFAULT_TTL);
+        when(adminDataSource.getConnection()).thenReturn(connection);
+        when(connection.createStatement()).thenReturn(statement);
 
         // WHEN
         var actual = factory.initializeStore(CACHE_NAME, null);
@@ -68,10 +74,12 @@ class PgStoreFactoryTest {
     }
 
     @Test
-    void should_return_expected_store_with_custom_ttl() {
+    void should_return_expected_store_with_custom_ttl() throws SQLException {
         // GIVEN
         var expectedTtl = 55;
         var expected = createStore(expectedTtl);
+        when(adminDataSource.getConnection()).thenReturn(connection);
+        when(connection.createStatement()).thenReturn(statement);
         when(storeProperties.getTtlSeconds()).thenReturn(expectedTtl);
         // WHEN
         var actual = factory.initializeStore(CACHE_NAME, storeProperties);
@@ -81,7 +89,7 @@ class PgStoreFactoryTest {
     }
 
     @Test
-    void should_create_table_and_index() throws Exception {
+    void should_create_table_and_index() throws SQLException {
         // GIVEN
         when(adminDataSource.getConnection()).thenReturn(connection);
         when(connection.createStatement()).thenReturn(statement);
@@ -90,7 +98,7 @@ class PgStoreFactoryTest {
         factory.init();
 
         // THEN
-        verify(statement, times(1)).execute(contains("CREATE UNLOGGED TABLE IF NOT EXISTS cache_data"));
+        verify(statement, times(1)).execute(contains("CREATE TABLE IF NOT EXISTS cache_data"));
         verify(statement, times(1)).execute(contains("CREATE INDEX IF NOT EXISTS idx_cache_data_expires_at"));
 
         verify(statement, times(1)).close();
@@ -114,7 +122,7 @@ class PgStoreFactoryTest {
                       .writeDataSource(userWriteDataStore)
                       .timeProvider(timeProvider)
                       .cacheName(CACHE_NAME)
-                      .tableName(TABLE_NAME)
+                      .tableName(TABLE_NAME + "_" + CACHE_NAME)
                       .ttlSeconds(expectedTtl)
                       .build();
     }
