@@ -5,7 +5,6 @@ import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.Cache;
 
 import java.util.Arrays;
 import java.util.concurrent.Callable;
@@ -13,7 +12,7 @@ import java.util.concurrent.Callable;
 @Builder
 @RequiredArgsConstructor
 @EqualsAndHashCode(exclude = "store")
-public class PgCache implements Cache, TypedCache {
+public class PgCache implements EvictableCache, TypedCache {
     private final String name;
     private final ValueSerializer serializer;
     private final Store store;
@@ -94,6 +93,11 @@ public class PgCache implements Cache, TypedCache {
     @Override
     public void clear() {
         store.clear();
+    }
+
+    @Override
+    public void evictExpired(int limit) {
+        store.evictExpired(limit);
     }
 
     private Long generateKey(byte[] normalizedKey) {

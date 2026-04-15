@@ -76,7 +76,14 @@ public class CacheConfig extends AbstractCachingConfiguration {
     @Bean("pgCacheManager")
     CacheManager cacheManager(StoreFactory storeFactory, ValueSerializer valueSerializer, PgCacheProperties properties) {
         Map<String, StoreProperties> caches = new HashMap<>(properties.getCaches());
-        return new PgCacheManager(storeFactory, valueSerializer, caches);
+        return PgCacheManager.builder()
+                             .storeFactory(storeFactory)
+                             .serializer(valueSerializer)
+                             .storesProperties(caches)
+                             .cleanupEnabled(properties.isCleanupEnabled())
+                             .cleanupEnabledSupplier(() -> true)
+                             .cleanupLimit(properties.getCleanupLimit())
+                             .build();
     }
 
     @Bean("pgCacheInterceptor")

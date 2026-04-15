@@ -64,7 +64,7 @@ class SimplePgOperationsIT {
 
         var valueSerializer = new JacksonSerializer(new ObjectMapper());
         var storesProperties = new HashMap<String, StoreProperties>();
-        var cacheManager = new PgCacheManager(factory, valueSerializer, storesProperties);
+        var cacheManager = new PgCacheManager(factory, valueSerializer, storesProperties, false, ()->false, 10);
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {

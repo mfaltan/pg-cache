@@ -29,6 +29,12 @@ public class PgCacheProperties {
     private int defaultTtlSeconds = 30 * 60;
 
     /**
+     * Default cleanup setup
+     */
+    private boolean cleanupEnabled = false;
+    private int cleanupLimit = 1000;
+
+    /**
      * Per-cache configuration
      */
     private Map<String, CacheProperties> caches = new HashMap<>();

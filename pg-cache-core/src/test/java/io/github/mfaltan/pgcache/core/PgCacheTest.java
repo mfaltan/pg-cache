@@ -278,6 +278,18 @@ class PgCacheTest {
         assertThatThrownBy(()->cache.get("wrongKey")).isExactlyInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void should_evict_expired_1000() {
+        // GIVEN
+        var limit = 1000;
+
+        // WHEN
+        cache.evictExpired(limit);
+
+        // THEN
+        verify(store).evictExpired(limit);
+    }
+
     private static CacheEntry createCacheEntry(byte[] normalizedKey, byte[] serializedValue) {
         return CacheEntry.builder()
                          .normalizedKey(normalizedKey)
