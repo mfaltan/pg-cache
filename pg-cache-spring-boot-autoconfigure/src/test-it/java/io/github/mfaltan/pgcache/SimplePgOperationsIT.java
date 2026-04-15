@@ -2,10 +2,7 @@ package io.github.mfaltan.pgcache;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.mfaltan.pgcache.core.JacksonSerializer;
-import io.github.mfaltan.pgcache.core.KeyEntry;
-import io.github.mfaltan.pgcache.core.PgCacheManager;
-import io.github.mfaltan.pgcache.core.PgStoreFactory;
+import io.github.mfaltan.pgcache.core.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -14,6 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,6 +44,7 @@ class SimplePgOperationsIT {
                                     .userDataSource(dataSource)
                                     .tableName("cache_data")
                                     .timeProvider(LocalDateTime::now)
+                                    .defaultTtlSeconds(20)
                                     .build();
 
         factory.init();
@@ -63,9 +62,12 @@ class SimplePgOperationsIT {
         }
 
         var valueSerializer = new JacksonSerializer(new ObjectMapper());
-        var cacheManager = new PgCacheManager(factory, valueSerializer);
+        var storesProperties = new HashMap<String, StoreProperties>();
+        var cacheManager = new PgCacheManager(factory, valueSerializer, storesProperties);
+
         var cache = cacheManager.getCache("cache1");
-        var type = new TypeReference<SomeValueClass>() {}.getType();
+        var type = new TypeReference<SomeValueClass>() {
+        }.getType();
         var someKey = KeyEntry.builder()
                               .rawKey("someKey")
                               .type(type)
@@ -91,5 +93,6 @@ class SimplePgOperationsIT {
         assertThat(storedValue.get()).isNull();
     }
 
-    private record SomeValueClass(String field1, Long field2){}
+    private record SomeValueClass(String field1, Long field2) {
+    }
 }

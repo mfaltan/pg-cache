@@ -17,7 +17,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PgStoreFactoryTest {
 
-    private static final String NAME = "cache_data";
+    private static final String TABLE_NAME = "cache_data";
+    private static final String CACHE_NAME = "cache1";
+    private static final int DEFAULT_TTL = 30;
 
     private  PgStoreFactory factory;
 
@@ -33,25 +35,46 @@ class PgStoreFactoryTest {
     @Mock
     Statement statement;
 
+    @Mock
+    StoreProperties storeProperties;
+
     @BeforeEach
     void init() {
-        factory = new PgStoreFactory(adminDataSource, userDataStore, NAME, timeProvider);
+        factory = new PgStoreFactory(adminDataSource, userDataStore, TABLE_NAME, timeProvider, DEFAULT_TTL);
     }
 
     @Test
-    void should_return_expected_store() {
+    void should_return_expected_store_with_default_ttl() {
         // GIVEN
-        var cacheName = "cache1";
-        var expected = PgStore.builder()
-                                     .dataSource(userDataStore)
-                                     .timeProvider(timeProvider)
-                                     .cacheName(cacheName)
-                                     .tableName(NAME)
-                                     .ttlSeconds(60)
-                                     .build();
+        var expected = createStore(DEFAULT_TTL);
+        when(storeProperties.getTtlSeconds()).thenReturn(null);
+        // WHEN
+        var actual = factory.initializeStore(CACHE_NAME, storeProperties);
+
+        // THEN
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void should_return_expected_store_with_default_ttl_again() {
+        // GIVEN
+        var expected = createStore(DEFAULT_TTL);
 
         // WHEN
-        var actual = factory.initializeStore(cacheName);
+        var actual = factory.initializeStore(CACHE_NAME, null);
+
+        // THEN
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void should_return_expected_store_with_custom_ttl() {
+        // GIVEN
+        var expectedTtl = 55;
+        var expected = createStore(expectedTtl);
+        when(storeProperties.getTtlSeconds()).thenReturn(expectedTtl);
+        // WHEN
+        var actual = factory.initializeStore(CACHE_NAME, storeProperties);
 
         // THEN
         assertThat(actual).isEqualTo(expected);
@@ -83,5 +106,15 @@ class PgStoreFactoryTest {
         // WHEN + THEN
         assertThatThrownBy(factory::init).isEqualTo(e);
         verifyNoMoreInteractions(connection, statement);
+    }
+
+    private PgStore createStore(int expectedTtl) {
+        return PgStore.builder()
+                      .dataSource(userDataStore)
+                      .timeProvider(timeProvider)
+                      .cacheName(CACHE_NAME)
+                      .tableName(TABLE_NAME)
+                      .ttlSeconds(expectedTtl)
+                      .build();
     }
 }

@@ -4,11 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -34,36 +35,36 @@ class PgCacheManagerTest {
     private ValueSerializer serializer;
 
     @Mock
+    private Map<String, StoreProperties> storesProperties = new HashMap<>();
+
+    @Mock
     private Store store, store2;
+
+    @Mock
+    private StoreProperties storeProperties;
 
     @Test
     void should_create_new_cache_when_does_not_exist() {
         // GIVEN
-        var expectedCache = PgCache.builder()
-                                   .name(CACHE_NAME_1)
-                                   .serializer(serializer)
-                                   .store(store)
-                                   .build();
-
-        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
+        var expectedCache = createCache();
+        when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
+        when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
 
         // WHEN
         var actual = cacheManager.getCache(CACHE_NAME_1);
 
         // THEN
         assertThat(actual).isEqualTo(expectedCache);
+        verifyNoInteractions(storeProperties);
     }
 
     @Test
     void should_return_same_instance_when_cache_already_exists() {
         // GIVEN
-        var expectedCache = PgCache.builder()
-                                   .name(CACHE_NAME_1)
-                                   .serializer(serializer)
-                                   .store(store)
-                                   .build();
+        var expectedCache = createCache();
 
-        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
+        when(storesProperties.get(CACHE_NAME_1)).thenReturn(null);
+        when(storeFactory.initializeStore(CACHE_NAME_1, null)).thenReturn(store);
 
         // WHEN
         var first = cacheManager.getCache(CACHE_NAME_1);
@@ -72,14 +73,16 @@ class PgCacheManagerTest {
         // THEN
         assertThat(second).isSameAs(first);
         assertThat(first).isEqualTo(expectedCache);
-        verify(storeFactory, times(1)).initializeStore(any());
+        verifyNoMoreInteractions(storeFactory);
     }
 
     @Test
     void should_create_different_caches_for_different_names() {
         // GIVEN
-        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
-        when(storeFactory.initializeStore(CACHE_NAME_2)).thenReturn(store2);
+        when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
+        when(storesProperties.get(CACHE_NAME_2)).thenReturn(storeProperties);
+        when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
+        when(storeFactory.initializeStore(CACHE_NAME_2, storeProperties)).thenReturn(store2);
 
         // WHEN
         var cache1 = cacheManager.getCache(CACHE_NAME_1);
@@ -109,7 +112,8 @@ class PgCacheManagerTest {
     @Test
     void should_create_only_one_cache_concurrently() throws Exception {
 
-        when(storeFactory.initializeStore(CACHE_NAME_1)).thenReturn(store);
+        when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
+        when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
 
         int threads = 20;
         try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
@@ -136,7 +140,16 @@ class PgCacheManagerTest {
             done.await();
 
             assertThat(results).hasSize(1);
-            verify(storeFactory, times(1)).initializeStore(any());
+            verify(storeFactory, times(1)).initializeStore(CACHE_NAME_1, storeProperties); //TEST
         }
     }
+
+    private PgCache createCache() {
+        return PgCache.builder()
+                      .name(CACHE_NAME_1)
+                      .serializer(serializer)
+                      .store(store)
+                      .build();
+    }
+
 }

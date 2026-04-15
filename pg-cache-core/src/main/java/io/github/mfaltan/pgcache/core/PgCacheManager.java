@@ -15,6 +15,7 @@ public class PgCacheManager implements CacheManager {
     private final StoreFactory storeFactory;
     private final ValueSerializer serializer;
     private final Map<String, Cache> caches = new HashMap<>();
+    private final Map<String, StoreProperties> storesProperties;
 
     @Override
     public Cache getCache(String name) {
@@ -25,7 +26,8 @@ public class PgCacheManager implements CacheManager {
                 if (caches.containsKey(name)) {
                     return caches.get(name);
                 }
-                var store = storeFactory.initializeStore(name);
+                var storeProp = storesProperties.get(name);
+                var store = storeFactory.initializeStore(name, storeProp);
 
                 var cache = PgCache.builder()
                                    .name(name)
