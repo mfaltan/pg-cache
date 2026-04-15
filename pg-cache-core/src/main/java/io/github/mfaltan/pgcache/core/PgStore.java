@@ -1,6 +1,7 @@
 package io.github.mfaltan.pgcache.core;
 
 
+import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +50,7 @@ public class PgStore implements Store {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            //TODO replace for custom exception
-            throw new RuntimeException("Failed to PUT cache entry", e);
+            throw new PgCacheStoreException("Failed to PUT cache entry", e);
         }
     }
 
@@ -83,8 +83,7 @@ public class PgStore implements Store {
             }
 
         } catch (SQLException e) {
-            //TODO replace for custom exception
-            throw new RuntimeException("GET failed", e);
+            throw new PgCacheStoreException("GET failed", e);
         }
     }
 
@@ -104,8 +103,7 @@ public class PgStore implements Store {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            //TODO replace for custom exception
-            throw new RuntimeException("Failed to REMOVE cache entry", e);
+            throw new PgCacheStoreException("Failed to REMOVE cache entry", e);
         }
     }
 
@@ -123,8 +121,7 @@ public class PgStore implements Store {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            //TODO replace for custom exception
-            throw new RuntimeException("Failed to CLEAR cache", e);
+            throw new PgCacheStoreException("Failed to CLEAR cache", e);
         }
     }
 }
