@@ -1,8 +1,8 @@
 package io.github.mfaltan.pgcache.core;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
@@ -25,7 +25,6 @@ class PgCacheManagerTest {
     private static final String CACHE_NAME_1 = "cache1";
     private static final String CACHE_NAME_2 = "cache2";
 
-    @InjectMocks
     private PgCacheManager cacheManager;
 
     @Mock
@@ -42,6 +41,18 @@ class PgCacheManagerTest {
 
     @Mock
     private StoreProperties storeProperties;
+
+    @BeforeEach
+    void init() {
+        cacheManager = PgCacheManager.builder()
+                                     .storeFactory(storeFactory)
+                                     .storesProperties(storesProperties)
+                                     .serializer(serializer)
+                                     .cleanupEnabled(false)
+                                     .cleanupLimit(0)
+                                     .cleanupEnabledSupplier(() -> false)
+                                     .build();
+    }
 
     @Test
     void should_create_new_cache_when_does_not_exist() {

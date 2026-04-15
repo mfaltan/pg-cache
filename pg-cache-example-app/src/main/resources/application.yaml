@@ -2,6 +2,9 @@ pg-cache:
   enabled: true
   table-name: cache_data
   default-ttl-seconds: 30
+  cleanup-enabled: true
+  cleanup-limit: 10
+  cleanup-cron: "*/10 * * * * *"
   caches:
     cache1:
       ttl-seconds: 5

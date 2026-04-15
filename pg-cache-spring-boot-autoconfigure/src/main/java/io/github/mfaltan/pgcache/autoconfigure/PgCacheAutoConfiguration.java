@@ -7,12 +7,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Auto-configures pg-cache when included via starter.
  */
 @AutoConfiguration
 @EnableCaching
+@EnableScheduling
 @ConditionalOnProperty(
         prefix = "pg-cache",
         name = "enabled",

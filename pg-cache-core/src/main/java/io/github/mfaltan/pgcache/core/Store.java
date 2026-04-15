@@ -9,4 +9,6 @@ public interface Store {
     void clear();
 
     CacheEntry get(Long key);
+
+    void evictExpired(int limit);
 }

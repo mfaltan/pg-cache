@@ -28,4 +28,10 @@ public class RamStore implements Store {
     public CacheEntry get(Long key) {
         return data.get(key);
     }
+
+    @Override
+    public void evictExpired(int limit) {
+        //not worth implementation, this class will be removed anyway
+        data.clear();
+    }
 }

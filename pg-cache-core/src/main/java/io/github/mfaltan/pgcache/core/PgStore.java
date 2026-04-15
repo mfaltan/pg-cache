@@ -88,6 +88,34 @@ public class PgStore implements Store {
     }
 
     @Override
+    public void evictExpired(int limit) {
+        var sql = """
+                DELETE FROM %s
+                WHERE ctid IN (
+                    SELECT ctid
+                    FROM %s
+                    WHERE expires_at < ?
+                    LIMIT ?
+                )
+                """.formatted(tableName, tableName);
+
+        var now = timeProvider.now();
+
+        try {
+            try (var conn = readDataSource.getConnection();
+                 var ps = conn.prepareStatement(sql)) {
+                ps.setTimestamp(1, Timestamp.valueOf(now));
+                ps.setInt(2, limit);
+                ps.executeUpdate();
+
+                log.info("Part of the expired entries for cache {} was evicted", cacheName);
+            }
+        } catch (SQLException e) {
+            throw new PgCacheStoreException("Limited evict failed", e);
+        }
+    }
+
+    @Override
     public void remove(Long key) {
         String sql = """
                 DELETE FROM %s
