@@ -201,7 +201,7 @@ class PgCacheTest {
     @Test
     void should_load_value_with_callable_and_cache_it() throws Exception {
         // GIVEN
-        var cacheEntry = createCacheEntry(KEY_BYTES, VALUE_BYTES);
+        var entry = createCacheEntry(KEY_BYTES, VALUE_BYTES);
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.serialize(SOME_VALUE)).thenReturn(VALUE_BYTES);
@@ -220,7 +220,7 @@ class PgCacheTest {
             // THEN
             assertThat(first).isEqualTo(SOME_VALUE);
             verify(loader).call();
-            verify(store).put(SOME_LONG_KEY, cacheEntry);
+            verify(store).put(SOME_LONG_KEY, entry);
         }
     }
 

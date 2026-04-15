@@ -1,5 +1,7 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
+import io.github.mfaltan.pgcache.core.exception.PgStoreFactoryException;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +24,12 @@ public class PgStoreFactory implements StoreFactory {
     private final int defaultTtlSeconds;
 
     @PostConstruct
-    public void init() throws Exception {
-        createTableIfNotExists();
+    public void init() {
+        try {
+            createTableIfNotExists();
+        } catch (SQLException e) {
+            throw new PgStoreFactoryException("Error when initializing pg store", e);
+        }
     }
 
     @Override

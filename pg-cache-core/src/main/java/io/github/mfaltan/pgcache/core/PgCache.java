@@ -107,8 +107,8 @@ public class PgCache implements Cache, TypedCache {
     }
 
     private KeyEntry keyToKeyEntry(Object key) {
-        if (key instanceof KeyEntry) {
-            return (KeyEntry) key;
+        if (key instanceof KeyEntry keyEntry) {
+            return keyEntry;
         } else {
             throw new IllegalArgumentException("Provided key is not KeyEntry");
         }
