@@ -1,6 +1,10 @@
 pg-cache:
   enabled: true
   table-name: cache_data
+  default-ttl-seconds: 30
+  caches:
+    cache1:
+      ttl-seconds: 5
 
   admin-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache

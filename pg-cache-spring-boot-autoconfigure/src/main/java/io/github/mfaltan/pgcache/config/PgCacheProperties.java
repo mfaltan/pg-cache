@@ -1,8 +1,12 @@
 package io.github.mfaltan.pgcache.config;
 
+import io.github.mfaltan.pgcache.core.StoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ConfigurationProperties(prefix = "pg-cache")
 @Getter
@@ -20,10 +24,30 @@ public class PgCacheProperties {
     private String tableName = "cache_data";
 
     /**
+     * Default TTL
+     */
+    private int defaultTtlSeconds = 30 * 60;
+
+    /**
+     * Per-cache configuration
+     */
+    private Map<String, CacheProperties> caches = new HashMap<>();
+
+
+    /**
      * Admin datasource (DDL, schema management)
      */
     private DataSourceProperties adminDatasource = new DataSourceProperties();
     private final DataSourceProperties userDataSource = new DataSourceProperties();
+
+    @Getter
+    @Setter
+    public static class CacheProperties implements StoreProperties {
+        /**
+         * TTL in seconds (optional, falls back to default)
+         */
+        private Integer ttlSeconds;
+    }
 
     @Getter
     @Setter

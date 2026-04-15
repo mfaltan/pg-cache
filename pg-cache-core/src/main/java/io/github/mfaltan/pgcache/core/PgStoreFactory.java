@@ -18,6 +18,7 @@ public class PgStoreFactory implements StoreFactory {
     private final DataSource userDataSource;
     private final String tableName;
     private final CurrentDateTimeProvider timeProvider;
+    private final int defaultTtlSeconds;
 
     @PostConstruct
     public void init() throws Exception {
@@ -25,13 +26,15 @@ public class PgStoreFactory implements StoreFactory {
     }
 
     @Override
-    public Store initializeStore(String name) {
+    public Store initializeStore(String name, StoreProperties storeProperties) {
+        var ttlSeconds = storeProperties != null ? storeProperties.getTtlSeconds() : null;
+
         return PgStore.builder()
                       .dataSource(userDataSource)
                       .timeProvider(timeProvider)
                       .cacheName(name)
                       .tableName(tableName)
-                      .ttlSeconds(60)
+                      .ttlSeconds(ttlSeconds != null ? ttlSeconds : defaultTtlSeconds)
                       .build();
     }
 

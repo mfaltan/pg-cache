@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Role;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableConfigurationProperties(PgCacheProperties.class)
@@ -53,6 +55,7 @@ public class CacheConfig extends AbstractCachingConfiguration {
                              .adminDataSource(adminDataSource)
                              .userDataSource(userDataSource)
                              .tableName(properties.getTableName())
+                             .defaultTtlSeconds(properties.getDefaultTtlSeconds())
                              .timeProvider(currentDateTimeProvider)
                              .build();
     }
@@ -64,8 +67,9 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean("pgCacheManager")
-    CacheManager cacheManager(StoreFactory storeFactory, ValueSerializer valueSerializer) {
-        return new PgCacheManager(storeFactory, valueSerializer);
+    CacheManager cacheManager(StoreFactory storeFactory, ValueSerializer valueSerializer, PgCacheProperties properties) {
+        Map<String, StoreProperties> caches = new HashMap<>(properties.getCaches());
+        return new PgCacheManager(storeFactory, valueSerializer, caches);
     }
 
     @Bean("pgCacheInterceptor")

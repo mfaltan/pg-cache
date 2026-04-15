@@ -2,6 +2,8 @@ package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Builder;
+import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,12 +11,16 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PgCacheManagerIT {
 
+    private static final int TTL_SECONDS_1 = 30;
+    private static final int TTL_SECONDS_2 = 45;
     private static final String CACHE_1 = "cache1";
     private static final String CACHE_2 = "cache2";
     private static final String SOME_KEY = "someKey";
@@ -25,10 +31,15 @@ class PgCacheManagerIT {
     private final ObjectMapper mapper = new ObjectMapper();
     private final RamStoreFactory storeFactory = new RamStoreFactory();
     private final ValueSerializer serializer = new JacksonSerializer(mapper);
+    private final Map<String, StoreProperties> storesProperties = new HashMap<>();
 
     @BeforeEach
     void init() {
-        pgCacheManager = new PgCacheManager(storeFactory, serializer);
+        storesProperties.clear();
+        storesProperties.put(CACHE_1, createStoreProperties(TTL_SECONDS_1));
+        storesProperties.put(CACHE_2, createStoreProperties(TTL_SECONDS_2));
+
+        pgCacheManager = new PgCacheManager(storeFactory, serializer, storesProperties);
     }
 
     @Test
@@ -127,22 +138,41 @@ class PgCacheManagerIT {
 
     static Stream<Arguments> simpleValuesToBeCached() {
         return Stream.of(
-                Arguments.of(SOME_VALUE, new TypeReference<String>() {}.getType()),
-                Arguments.of(1, new TypeReference<Integer>() {}.getType()),
-                Arguments.of(null, new TypeReference<Void>() {}.getType()));
+                Arguments.of(SOME_VALUE, new TypeReference<String>() {
+                }.getType()),
+                Arguments.of(1, new TypeReference<Integer>() {
+                }.getType()),
+                Arguments.of(null, new TypeReference<Void>() {
+                }.getType()));
     }
 
     static Stream<Arguments> valuesToBeCached() {
         return Stream.of(
-                Arguments.of(SOME_VALUE, String.class,new TypeReference<String>() {}.getType()),
-                Arguments.of(someValueObject(), ValueClass.class, new TypeReference<ValueClass>() {}.getType()),
-                Arguments.of(null, ValueClass.class, new TypeReference<ValueClass>() {}.getType()));
+                Arguments.of(SOME_VALUE, String.class, new TypeReference<String>() {
+                }.getType()),
+                Arguments.of(someValueObject(), ValueClass.class, new TypeReference<ValueClass>() {
+                }.getType()),
+                Arguments.of(null, ValueClass.class, new TypeReference<ValueClass>() {
+                }.getType()));
     }
 
     private static ValueClass someValueObject() {
         return new ValueClass("Peter", 22L);
     }
 
+    private static StoreProperties createStoreProperties(Integer ttlSeconds) {
+        return StoreProp.builder()
+                        .ttlSeconds(ttlSeconds)
+                        .build();
+    }
+
+
     private record ValueClass(String name, Long age) {
+    }
+
+    @Getter
+    @Builder
+    private static class StoreProp implements StoreProperties {
+        Integer ttlSeconds;
     }
 }
