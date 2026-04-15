@@ -110,7 +110,7 @@ class PgCacheManagerTest {
     }
 
     @Test
-    void should_create_only_one_cache_concurrently() throws Exception {
+    void should_create_only_one_cache_concurrently() throws InterruptedException {
 
         when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
         when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
@@ -129,7 +129,9 @@ class PgCacheManagerTest {
                         start.await();
                         Cache cache = cacheManager.getCache(CACHE_NAME_1);
                         results.add(cache);
-                    } catch (Exception ignored) {
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
                     } finally {
                         done.countDown();
                     }
