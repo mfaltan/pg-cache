@@ -95,7 +95,7 @@ class CacheEntryTest {
                 new byte[]{2}
         );
 
-        assertThat(a).isNotEqualTo(null);
-        assertThat(a).isNotEqualTo("string");
+        assertThat(a).isNotEqualTo(null)
+                     .isNotEqualTo("string");
     }
 }
