@@ -102,7 +102,7 @@ public class PgStore implements Store {
         var now = timeProvider.now();
 
         try {
-            try (var conn = readDataSource.getConnection();
+            try (var conn = writeDataSource.getConnection();
                  var ps = conn.prepareStatement(sql)) {
                 ps.setTimestamp(1, Timestamp.valueOf(now));
                 ps.setInt(2, limit);
