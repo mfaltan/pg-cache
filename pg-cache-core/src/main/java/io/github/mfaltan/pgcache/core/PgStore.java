@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 
 @Slf4j
@@ -21,6 +22,7 @@ public class PgStore implements Store {
 
     private final DataSource readDataSource;
     private final DataSource writeDataSource;
+    private final DataSource adminDataSource;
     private final CurrentDateTimeProvider timeProvider;
     private final String tableName;
     private final String cacheName;
@@ -137,16 +139,13 @@ public class PgStore implements Store {
 
     @Override
     public void clear() {
-        String sql = """
-                DELETE FROM %s
-                WHERE name = ?
-                """.formatted(tableName);
+        log.info("Truncating whole partition {}", tableName);
+        String sql = "TRUNCATE TABLE " + tableName;
 
-        try (Connection conn = writeDataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = adminDataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
 
-            ps.setString(1, cacheName);
-            ps.executeUpdate();
+            stmt.execute(sql);
 
         } catch (SQLException e) {
             throw new PgCacheStoreException("Failed to CLEAR cache", e);

@@ -120,6 +120,7 @@ class PgStoreFactoryTest {
         return PgStore.builder()
                       .readDataSource(userReadDataStore)
                       .writeDataSource(userWriteDataStore)
+                      .adminDataSource(adminDataSource)
                       .timeProvider(timeProvider)
                       .cacheName(CACHE_NAME)
                       .tableName(TABLE_NAME + "_" + CACHE_NAME)
