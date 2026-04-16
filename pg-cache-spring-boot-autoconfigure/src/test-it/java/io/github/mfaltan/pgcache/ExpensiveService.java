@@ -21,6 +21,10 @@ public class ExpensiveService {
         return "evict-" + input + "-" + counter.incrementAndGet();
     }
 
+    @CacheEvict(cacheNames = "cache1", allEntries = true)
+    public void evictAll() {
+    }
+
     public int getInvocationCount() {
         return counter.get();
     }

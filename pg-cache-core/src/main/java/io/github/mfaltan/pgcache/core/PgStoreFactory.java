@@ -53,6 +53,7 @@ public class PgStoreFactory implements StoreFactory {
         }
 
         return PgStore.builder()
+                      .adminDataSource(adminDataSource)
                       .readDataSource(userReadDataSource)
                       .writeDataSource(userWriteDataSource)
                       .timeProvider(timeProvider)

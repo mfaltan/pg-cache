@@ -66,6 +66,11 @@ public class PgCacheIT {
 
         String v6 = service.compute("A");
         assertThat(v6).isEqualTo("value-A-4");
+
+        service.evictAll();
+
+        String v7 = service.compute("A");
+        assertThat(v7).isEqualTo("value-A-5");
     }
 
 
