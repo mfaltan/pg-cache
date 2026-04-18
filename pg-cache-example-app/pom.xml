@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.mfaltan</groupId>
         <artifactId>pg-cache</artifactId>
-        <version>${revision}</version>
+        <version>0.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pg-cache-example-app</artifactId>
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>io.github.mfaltan</groupId>
             <artifactId>pg-cache-spring-boot-starter</artifactId>
-            <version>${revision}</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -52,6 +52,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${maven.boot.plugin.version}</version>
             </plugin>
 
             <plugin>

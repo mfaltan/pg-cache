@@ -6,7 +6,7 @@
 
     <groupId>io.github.mfaltan</groupId>
     <artifactId>pg-cache</artifactId>
-    <version>${revision}</version>
+    <version>0.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>pg-cache</name>
@@ -20,7 +20,6 @@
     </modules>
 
     <properties>
-        <revision>0.3.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Java -->
         <java.version>21</java.version>
@@ -31,12 +30,13 @@
         <spring-boot.version>3.5.13</spring-boot.version>
         <lombok.version>1.18.34</lombok.version>
         <guava.version>33.5.0-jre</guava.version>
-        <testcontainers.version>1.20.1</testcontainers.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
         <!-- Plugins -->
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.5</maven.surefire.plugin.version>
         <maven.failsafe.plugin.version>3.5.5</maven.failsafe.plugin.version>
         <builder.helper.maven.plugin.version>3.6.1</builder.helper.maven.plugin.version>
+        <maven.boot.plugin.version>3.5.13</maven.boot.plugin.version>
     </properties>
 
     <dependencyManagement>

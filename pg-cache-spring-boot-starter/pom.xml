@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.mfaltan</groupId>
         <artifactId>pg-cache</artifactId>
-        <version>${revision}</version>
+        <version>0.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pg-cache-spring-boot-starter</artifactId>
@@ -25,13 +25,13 @@
         <dependency>
             <groupId>io.github.mfaltan</groupId>
             <artifactId>pg-cache-spring-boot-autoconfigure</artifactId>
-            <version>${revision}</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.mfaltan</groupId>
             <artifactId>pg-cache-core</artifactId>
-            <version>${revision}</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
 
     </dependencies>

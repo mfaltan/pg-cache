@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.mfaltan</groupId>
         <artifactId>pg-cache</artifactId>
-        <version>${revision}</version>
+        <version>0.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pg-cache-spring-boot-autoconfigure</artifactId>
@@ -94,6 +94,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <compilerArgs>
                         <arg>-parameters</arg>
