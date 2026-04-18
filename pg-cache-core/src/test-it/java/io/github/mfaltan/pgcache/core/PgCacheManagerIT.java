@@ -2,6 +2,8 @@ package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
+import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import lombok.Builder;
 import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,7 @@ class PgCacheManagerIT {
     private final ObjectMapper mapper = new ObjectMapper();
     private final RamStoreFactory storeFactory = new RamStoreFactory();
     private final ValueSerializer serializer = new JacksonSerializer(mapper);
+    private final CacheResilienceFactory cacheResilienceFactory = new NoOpCacheResilienceFactory();
     private final Map<String, StoreProperties> storesProperties = new HashMap<>();
 
     @BeforeEach
@@ -39,7 +42,7 @@ class PgCacheManagerIT {
         storesProperties.put(CACHE_1, createStoreProperties(TTL_SECONDS_1));
         storesProperties.put(CACHE_2, createStoreProperties(TTL_SECONDS_2));
 
-        pgCacheManager = new PgCacheManager(storeFactory, serializer, storesProperties, false, () -> false, 0);
+        pgCacheManager = new PgCacheManager(storeFactory, serializer, cacheResilienceFactory, storesProperties, false, () -> false, 0);
     }
 
     @Test

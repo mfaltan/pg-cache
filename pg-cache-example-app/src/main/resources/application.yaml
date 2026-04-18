@@ -12,16 +12,19 @@ pg-cache:
   admin-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache
     username: pgcache-admin
+    connectionTimeoutMs: 2000
     #password:
 
   user-read-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache
     username: pgcache-user
+    connectionTimeoutMs: 2000
     #password:
     maximum-pool-size: 5
 
   user-write-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache
     username: pgcache-user
+    connectionTimeoutMs: 2000
     #password:
     maximum-pool-size: 2

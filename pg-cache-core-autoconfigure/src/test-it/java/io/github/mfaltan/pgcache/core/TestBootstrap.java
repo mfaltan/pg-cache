@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache;
+package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.SpringBootConfiguration;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootConfiguration
-@ComponentScan(basePackages = "io.github.mfaltan.pgcache")
+@ComponentScan(basePackages = "io.github.mfaltan.pgcache.core")
 public class TestBootstrap {
 
     @Bean

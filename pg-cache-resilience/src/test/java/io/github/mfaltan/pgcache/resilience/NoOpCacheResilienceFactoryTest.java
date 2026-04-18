@@ -8,7 +8,7 @@ class NoOpCacheResilienceFactoryTest {
 
     private static final String CACHE_NAME = "cache-name";
 
-    private final NoCacheResilienceFactory factory = new NoCacheResilienceFactory();
+    private final NoOpCacheResilienceFactory factory = new NoOpCacheResilienceFactory();
 
     @Test
     void should_create_new_no_cache_resilience_instance() {

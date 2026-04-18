@@ -2,6 +2,7 @@ package io.github.mfaltan.pgcache.core;
 
 import com.google.common.hash.Hashing;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
+import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class PgCache implements EvictableCache, TypedCache {
     private final String name;
     private final ValueSerializer serializer;
     private final Store store;
+    private final CacheResilience cacheResilience;
 
     @Override
     public String getName() {
@@ -30,22 +32,13 @@ public class PgCache implements EvictableCache, TypedCache {
     @Override
     public ValueWrapper get(Object key) {
         var keyEntry = keyToKeyEntry(key);
-        CacheEntry data = getCacheEntry(keyEntry);
-        if (data == null) return null;
-
-        Object value = serializer.deserialize(data.value(), keyEntry.type());
-        return () -> value;
+        return cacheResilience.execute(() -> getInternal(keyEntry), () -> null);
     }
 
     @Override
     public <T> T get(Object key, Class<T> type) {
         var keyEntry = keyToKeyEntry(key);
-        CacheEntry data = getCacheEntry(keyEntry);
-        if (data == null) {
-            return null;
-        } else {
-            return serializer.deserialize(data.value(), type);
-        }
+        return cacheResilience.execute(() -> getInternal(keyEntry, type), () -> null);
     }
 
     @Override
@@ -69,6 +62,47 @@ public class PgCache implements EvictableCache, TypedCache {
     @Override
     public void put(Object key, Object value) {
         var keyEntry = keyToKeyEntry(key);
+        cacheResilience.execute(() -> putInternal(keyEntry, value), () -> {
+        });
+    }
+
+    @Override
+    public void evict(Object key) {
+        var keyEntry = keyToKeyEntry(key);
+        cacheResilience.execute(() -> evictInternal(keyEntry), () -> {
+        });
+    }
+
+    @Override
+    public void clear() {
+        cacheResilience.execute(store::clear, () -> {
+        });
+    }
+
+    @Override
+    public void evictExpired(int limit) {
+        cacheResilience.execute(() -> store.evictExpired(limit), () -> {
+        });
+    }
+
+    private ValueWrapper getInternal(KeyEntry keyEntry) {
+        CacheEntry data = getCacheEntry(keyEntry);
+        if (data == null) return null;
+
+        Object value = serializer.deserialize(data.value(), keyEntry.type());
+        return () -> value;
+    }
+
+    private <T> T getInternal(KeyEntry keyEntry, Class<T> type) {
+        CacheEntry data = getCacheEntry(keyEntry);
+        if (data == null) {
+            return null;
+        } else {
+            return serializer.deserialize(data.value(), type);
+        }
+    }
+
+    private void putInternal(KeyEntry keyEntry, Object value) {
         byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
 
@@ -82,22 +116,10 @@ public class PgCache implements EvictableCache, TypedCache {
         store.put(longKey, entry);
     }
 
-    @Override
-    public void evict(Object key) {
-        var keyEntry = keyToKeyEntry(key);
+    private void evictInternal(KeyEntry keyEntry) {
         byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
         store.remove(longKey);
-    }
-
-    @Override
-    public void clear() {
-        store.clear();
-    }
-
-    @Override
-    public void evictExpired(int limit) {
-        store.evictExpired(limit);
     }
 
     private Long generateKey(byte[] normalizedKey) {

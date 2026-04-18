@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache;
+package io.github.mfaltan.pgcache.core;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
