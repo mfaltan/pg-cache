@@ -35,7 +35,7 @@
 
         <dependency>
             <groupId>io.github.mfaltan</groupId>
-            <artifactId>pg-cache-spring-boot-starter</artifactId>
+            <artifactId>pg-cache-core-starter</artifactId>
             <version>0.3.0-SNAPSHOT</version>
         </dependency>
 

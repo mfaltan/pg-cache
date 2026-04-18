@@ -14,9 +14,13 @@
 
     <modules>
         <module>pg-cache-core</module>
-        <module>pg-cache-spring-boot-autoconfigure</module>
-        <module>pg-cache-spring-boot-starter</module>
+        <module>pg-cache-core-autoconfigure</module>
+        <module>pg-cache-core-starter</module>
         <module>pg-cache-example-app</module>
+        <module>pg-cache-resilience</module>
+        <module>pg-cache-resilience-autoconfigure</module>
+        <module>pg-cache-all-starter</module>
+        <module>pg-cache-resilience-starter</module>
     </modules>
 
     <properties>
