@@ -32,6 +32,7 @@
 
         <!-- Dependencies -->
         <spring-boot.version>3.5.13</spring-boot.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
         <lombok.version>1.18.34</lombok.version>
         <guava.version>33.5.0-jre</guava.version>
         <testcontainers.version>1.21.4</testcontainers.version>
