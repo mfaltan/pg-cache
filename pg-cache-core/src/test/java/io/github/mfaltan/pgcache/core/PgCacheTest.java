@@ -4,6 +4,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
+import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +14,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PgCacheTest {
@@ -54,12 +63,16 @@ class PgCacheTest {
     @Mock
     private CacheEntry cacheEntry;
 
+    @Mock
+    private CacheResilience cacheResilience;
+
     @BeforeEach
     void setUp() {
         cache = PgCache.builder()
                        .name(CACHE_NAME)
                        .serializer(serializer)
                        .store(store)
+                       .cacheResilience(cacheResilience)
                        .build();
     }
 
@@ -80,6 +93,7 @@ class PgCacheTest {
     @Test
     void should_successfully_get_value() {
         // GIVEN
+        mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.deserialize(VALUE_BYTES, type)).thenReturn(SOME_VALUE);
@@ -87,7 +101,6 @@ class PgCacheTest {
         when(cacheEntry.value()).thenReturn(VALUE_BYTES);
         when(cacheEntry.normalizedKey()).thenReturn(KEY_BYTES);
         when(someKey.type()).thenReturn(type);
-
         try (MockedStatic<Hashing> hashing = mockStatic(Hashing.class)) {
 
             hashing.when(Hashing::murmur3_128).thenReturn(hashFunction);
@@ -106,6 +119,7 @@ class PgCacheTest {
     @Test
     void should_return_null_when_missing() {
         //GIVEN
+        mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(store.get(SOME_LONG_KEY)).thenReturn(null);
@@ -127,6 +141,7 @@ class PgCacheTest {
     @Test
     void should_return_typed_null_when_missing() {
         //GIVEN
+        mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(store.get(SOME_LONG_KEY)).thenReturn(null);
@@ -148,6 +163,7 @@ class PgCacheTest {
     @Test
     void should_get_typed_value() {
         // GIVEN
+        mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.deserialize(VALUE_BYTES, String.class)).thenReturn(SOME_VALUE);
@@ -172,6 +188,7 @@ class PgCacheTest {
     @Test
     void should_evict_value() {
         // GIVEN
+        mockCacheResilienceVoid();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
 
@@ -191,6 +208,9 @@ class PgCacheTest {
 
     @Test
     void should_clear_cache() {
+        // GIVEN
+        mockCacheResilienceVoid();
+
         // WHEN
         cache.clear();
 
@@ -201,6 +221,9 @@ class PgCacheTest {
     @Test
     void should_load_value_with_callable_and_cache_it() throws Exception {
         // GIVEN
+        mockCacheResilience();
+        mockCacheResilienceVoid();
+
         var entry = createCacheEntry(KEY_BYTES, VALUE_BYTES);
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
@@ -227,6 +250,7 @@ class PgCacheTest {
     @Test
     void should_not_load_value_with_callable_because_it_is_already_cached() {
         // GIVEN
+        mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(store.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
@@ -253,6 +277,8 @@ class PgCacheTest {
     @Test
     void should_wrap_exception_from_callable() throws Exception {
         // GIVEN
+        mockCacheResilience();
+
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         var e = new RuntimeException();
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
@@ -275,12 +301,14 @@ class PgCacheTest {
     @Test
     void should_throw_exception_because_of_incorrect_provided_key() {
         // WHEN + THEN
-        assertThatThrownBy(()->cache.get("wrongKey")).isExactlyInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> cache.get("wrongKey")).isExactlyInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void should_evict_expired_1000() {
         // GIVEN
+        mockCacheResilienceVoid();
+
         var limit = 1000;
 
         // WHEN
@@ -296,5 +324,22 @@ class PgCacheTest {
                          .value(serializedValue)
                          .build();
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private void mockCacheResilience() {
+        when(cacheResilience.execute(any(Supplier.class), any(Supplier.class)))
+                .thenAnswer(invocation -> {
+                    Supplier<?> primary = invocation.getArgument(0);
+                    return primary.get();
+                });
+    }
+
+    private void mockCacheResilienceVoid() {
+        doAnswer(invocation -> {
+            Runnable primary = invocation.getArgument(0);
+            primary.run();   // execute primary
+            return null;     // void method → must return null
+        }).when(cacheResilience).execute(any(Runnable.class), any(Runnable.class));
     }
 }

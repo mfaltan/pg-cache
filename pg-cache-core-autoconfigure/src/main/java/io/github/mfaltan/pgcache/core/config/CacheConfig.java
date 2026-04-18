@@ -1,7 +1,16 @@
 package io.github.mfaltan.pgcache.core.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.mfaltan.pgcache.core.*;
+import io.github.mfaltan.pgcache.core.CurrentDateTimeProvider;
+import io.github.mfaltan.pgcache.core.JacksonSerializer;
+import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
+import io.github.mfaltan.pgcache.core.PgCacheManager;
+import io.github.mfaltan.pgcache.core.PgStoreFactory;
+import io.github.mfaltan.pgcache.core.StoreFactory;
+import io.github.mfaltan.pgcache.core.StoreProperties;
+import io.github.mfaltan.pgcache.core.ValueSerializer;
+import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
+import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -74,11 +83,15 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean("pgCacheManager")
-    CacheManager cacheManager(StoreFactory storeFactory, ValueSerializer valueSerializer, PgCacheProperties properties) {
+    CacheManager cacheManager(StoreFactory storeFactory,
+                              ValueSerializer valueSerializer,
+                              CacheResilienceFactory cacheResilienceFactory,
+                              PgCacheProperties properties) {
         Map<String, StoreProperties> caches = new HashMap<>(properties.getCaches());
         return PgCacheManager.builder()
                              .storeFactory(storeFactory)
                              .serializer(valueSerializer)
+                             .cacheResilienceFactory(cacheResilienceFactory)
                              .storesProperties(caches)
                              .cleanupEnabled(properties.isCleanupEnabled())
                              .cleanupEnabledSupplier(() -> true)
@@ -94,5 +107,10 @@ public class CacheConfig extends AbstractCachingConfiguration {
         interceptor.configure(this.errorHandler, this.keyGenerator, this.cacheResolver, this.cacheManager);
         interceptor.setCacheOperationSource(cacheOperationSource);
         return interceptor;
+    }
+
+    @Bean
+    CacheResilienceFactory cacheResilienceFactory() {
+        return new NoOpCacheResilienceFactory();
     }
 }

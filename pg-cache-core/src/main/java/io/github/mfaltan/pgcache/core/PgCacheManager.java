@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
@@ -18,6 +19,7 @@ public class PgCacheManager implements CacheManager {
 
     private final StoreFactory storeFactory;
     private final ValueSerializer serializer;
+    private final CacheResilienceFactory cacheResilienceFactory;
     private final Map<String, EvictableCache> caches = new HashMap<>();
     private final Map<String, StoreProperties> storesProperties;
     private final boolean cleanupEnabled;
@@ -36,11 +38,13 @@ public class PgCacheManager implements CacheManager {
                 }
                 var storeProp = storesProperties.get(name);
                 var store = storeFactory.initializeStore(name, storeProp);
+                var cacheResilience = cacheResilienceFactory.create(name);
 
                 var cache = PgCache.builder()
                                    .name(name)
                                    .serializer(serializer)
                                    .store(store)
+                                   .cacheResilience(cacheResilience)
                                    .build();
                 caches.put(name, cache);
                 return cache;

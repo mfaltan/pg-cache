@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache;
+package io.github.mfaltan.pgcache.core;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

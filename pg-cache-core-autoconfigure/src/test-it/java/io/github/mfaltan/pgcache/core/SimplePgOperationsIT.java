@@ -1,8 +1,8 @@
-package io.github.mfaltan.pgcache;
+package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.mfaltan.pgcache.core.*;
+import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -64,7 +64,8 @@ class SimplePgOperationsIT {
 
         var valueSerializer = new JacksonSerializer(new ObjectMapper());
         var storesProperties = new HashMap<String, StoreProperties>();
-        var cacheManager = new PgCacheManager(factory, valueSerializer, storesProperties, false, ()->false, 10);
+        var cacheResilienceFactory = new NoOpCacheResilienceFactory();
+        var cacheManager = new PgCacheManager(factory, valueSerializer, cacheResilienceFactory, storesProperties, false, ()->false, 10);
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {
