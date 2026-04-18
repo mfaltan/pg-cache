@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class NoCacheResilienceFactoryTest {
+class NoOpCacheResilienceFactoryTest {
 
     private static final String CACHE_NAME = "cache-name";
 
@@ -16,7 +16,7 @@ class NoCacheResilienceFactoryTest {
         var result = factory.create(CACHE_NAME);
 
         // THEN
-        assertThat(result).isInstanceOf(NoCacheResilience.class);
+        assertThat(result).isInstanceOf(NoOpCacheResilience.class);
     }
 
     @Test

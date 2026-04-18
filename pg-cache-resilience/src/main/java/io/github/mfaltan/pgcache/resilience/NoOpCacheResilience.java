@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Supplier;
 
 @Slf4j
-public class NoCacheResilience implements CacheResilience{
+public class NoOpCacheResilience implements CacheResilience{
     @Override
     public <T> T execute(Supplier<T> primary, Supplier<T> fallback) {
         try {

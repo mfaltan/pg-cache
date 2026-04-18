@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NoCacheResilienceTest {
+class NoOpCacheResilienceTest {
 
     private static final String VALUE = "value";
 
@@ -29,7 +29,7 @@ class NoCacheResilienceTest {
     private Runnable fallbackRunnable;
 
     @InjectMocks
-    private NoCacheResilience resilience;
+    private NoOpCacheResilience resilience;
 
     @Test
     void should_execute_primary_supplier_successfully() {
