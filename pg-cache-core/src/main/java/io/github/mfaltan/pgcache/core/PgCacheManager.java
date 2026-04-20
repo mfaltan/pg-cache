@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.function.Supplier;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,8 +26,6 @@ public class PgCacheManager implements CacheManager {
     private final Map<String, EvictableCache> caches = new HashMap<>();
     private final Map<String, StoreProperties> storesProperties;
     private final boolean cleanupEnabled;
-    //in case of multi-node solution, we want to have the possibility, run this only at one node
-    private final Supplier<Boolean> cleanupEnabledSupplier;
     private final int cleanupLimit;
 
     @Override
@@ -56,10 +53,7 @@ public class PgCacheManager implements CacheManager {
         if (!cleanupEnabled) {
             return;
         }
-        var b = cleanupEnabledSupplier.get();
-        if (b != null && b) {
-            caches.values().forEach(c -> c.evictExpired(cleanupLimit));
-        }
+        caches.values().forEach(c -> c.evictExpired(cleanupLimit));
     }
 
     private PgCache createAndRegisterRealCache(String name, CacheResilience cacheResilience) {

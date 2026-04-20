@@ -63,7 +63,6 @@ class PgCacheManagerTest {
                                      .serializer(serializer)
                                      .cleanupEnabled(false)
                                      .cleanupLimit(0)
-                                     .cleanupEnabledSupplier(() -> false)
                                      .build();
     }
 
