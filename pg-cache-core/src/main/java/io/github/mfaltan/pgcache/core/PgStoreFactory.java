@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.common.StoreProperties;
 import io.github.mfaltan.pgcache.core.exception.PgStoreFactoryException;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;

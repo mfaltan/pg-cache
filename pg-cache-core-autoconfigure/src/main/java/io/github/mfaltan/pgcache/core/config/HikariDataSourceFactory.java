@@ -2,6 +2,7 @@ package io.github.mfaltan.pgcache.core.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.github.mfaltan.pgcache.common.PgCacheProperties.DataSourceProperties;
 
 import javax.sql.DataSource;
 
@@ -9,7 +10,7 @@ public class HikariDataSourceFactory {
 
     private HikariDataSourceFactory() {}
 
-    public static DataSource create(PgCacheProperties.DataSourceProperties props) {
+    public static DataSource create(DataSourceProperties props) {
 
         HikariConfig config = new HikariConfig();
 

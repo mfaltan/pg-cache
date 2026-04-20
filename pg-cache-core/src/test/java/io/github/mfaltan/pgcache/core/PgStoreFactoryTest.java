@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.common.StoreProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
