@@ -2,6 +2,7 @@ package io.github.mfaltan.pgcache.core;
 
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
+import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +43,7 @@ class PgCacheManagerTest {
     @Mock
     private CacheResilienceFactory cacheResilienceFactory;
 
-    @Mock
-    private CacheResilience cacheResilience;
+    private final CacheResilience cacheResilience = new NoOpCacheResilience();
 
     @Mock
     private Map<String, StoreProperties> storesProperties = new HashMap<>();
@@ -110,6 +110,7 @@ class PgCacheManagerTest {
         when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
         when(storeFactory.initializeStore(CACHE_NAME_2, storeProperties)).thenReturn(store2);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
+        when(cacheResilienceFactory.create(CACHE_NAME_2)).thenReturn(cacheResilience);
 
         // WHEN
         var cache1 = cacheManager.getCache(CACHE_NAME_1);
@@ -126,6 +127,8 @@ class PgCacheManagerTest {
     @Test
     void shouldReturnAllCacheNames() {
         // GIVEN
+        when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
+        when(cacheResilienceFactory.create(CACHE_NAME_2)).thenReturn(cacheResilience);
         cacheManager.getCache(CACHE_NAME_1);
         cacheManager.getCache(CACHE_NAME_2);
 

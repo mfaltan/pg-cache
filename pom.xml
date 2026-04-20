@@ -13,14 +13,15 @@
     <description>Simple caching library</description>
 
     <modules>
+        <module>pg-cache-resilience</module>
+        <module>pg-cache-resilience-4j</module>
+        <module>pg-cache-resilience-autoconfigure</module>
+        <module>pg-cache-resilience-starter</module>
         <module>pg-cache-core</module>
         <module>pg-cache-core-autoconfigure</module>
         <module>pg-cache-core-starter</module>
-        <module>pg-cache-example-app</module>
-        <module>pg-cache-resilience</module>
-        <module>pg-cache-resilience-autoconfigure</module>
         <module>pg-cache-all-starter</module>
-        <module>pg-cache-resilience-starter</module>
+        <module>pg-cache-example-app</module>
     </modules>
 
     <properties>
@@ -53,6 +54,65 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Core -->
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-core-autoconfigure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-core-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Resilience -->
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-resilience</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-resilience-4j</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-resilience-autoconfigure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-resilience-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Aggregators -->
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-all-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Example app (optional, usually not needed as dependency) -->
+            <dependency>
+                <groupId>io.github.mfaltan</groupId>
+                <artifactId>pg-cache-example-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

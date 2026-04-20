@@ -1,1 +1,1 @@
-io.github.mfaltan.pgcache.core.autoconfigure.PgCacheAutoConfiguration
+io.github.mfaltan.pgcache.core.autoconfigure.PgCacheCoreAutoConfiguration
