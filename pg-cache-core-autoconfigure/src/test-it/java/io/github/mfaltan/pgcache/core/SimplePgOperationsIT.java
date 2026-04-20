@@ -65,7 +65,7 @@ class SimplePgOperationsIT {
         var valueSerializer = new JacksonSerializer(new ObjectMapper());
         var storesProperties = new HashMap<String, StoreProperties>();
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
-        var cacheManager = new PgCacheManager(factory, valueSerializer, cacheResilienceFactory, storesProperties, false, ()->false, 10);
+        var cacheManager = new PgCacheManager(factory, valueSerializer, cacheResilienceFactory, storesProperties, false, 10);
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {

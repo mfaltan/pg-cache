@@ -97,10 +97,10 @@ public class PgStore implements Store {
                     SELECT ctid
                     FROM %s
                     WHERE expires_at < ?
+                    FOR UPDATE SKIP LOCKED
                     LIMIT ?
                 )
                 """.formatted(tableName, tableName);
-
         var now = timeProvider.now();
 
         try {

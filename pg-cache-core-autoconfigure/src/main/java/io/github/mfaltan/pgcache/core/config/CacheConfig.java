@@ -94,7 +94,6 @@ public class CacheConfig extends AbstractCachingConfiguration {
                              .cacheResilienceFactory(cacheResilienceFactory)
                              .storesProperties(caches)
                              .cleanupEnabled(properties.isCleanupEnabled())
-                             .cleanupEnabledSupplier(() -> true)
                              .cleanupLimit(properties.getCleanupLimit())
                              .build();
     }

@@ -42,7 +42,7 @@ class PgCacheManagerIT {
         storesProperties.put(CACHE_1, createStoreProperties(TTL_SECONDS_1));
         storesProperties.put(CACHE_2, createStoreProperties(TTL_SECONDS_2));
 
-        pgCacheManager = new PgCacheManager(storeFactory, serializer, cacheResilienceFactory, storesProperties, false, () -> false, 0);
+        pgCacheManager = new PgCacheManager(storeFactory, serializer, cacheResilienceFactory, storesProperties, false, 0);
     }
 
     @Test
