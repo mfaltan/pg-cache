@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
@@ -23,10 +24,9 @@ public class PgCacheManager implements CacheManager {
     private final StoreFactory storeFactory;
     private final ValueSerializer serializer;
     private final CacheResilienceFactory cacheResilienceFactory;
+    private final PgCacheProperties properties;
+
     private final Map<String, EvictableCache> caches = new HashMap<>();
-    private final Map<String, StoreProperties> storesProperties;
-    private final boolean cleanupEnabled;
-    private final int cleanupLimit;
 
     @Override
     public Cache getCache(String name) {
@@ -50,14 +50,14 @@ public class PgCacheManager implements CacheManager {
 
     @Scheduled(cron = "${pg-cache.cleanup-cron:0 */30 * * * *}")
     public void cleanupJob() {
-        if (!cleanupEnabled) {
+        if (!properties.isCleanupEnabled()) {
             return;
         }
-        caches.values().forEach(c -> c.evictExpired(cleanupLimit));
+        caches.values().forEach(c -> c.evictExpired(properties.getCleanupLimit()));
     }
 
     private PgCache createAndRegisterRealCache(String name, CacheResilience cacheResilience) {
-        var storeProp = storesProperties.get(name);
+        var storeProp = properties.getCaches().get(name);
         var store = storeFactory.initializeStore(name, storeProp);
         var cache = PgCache.builder()
                            .name(name)

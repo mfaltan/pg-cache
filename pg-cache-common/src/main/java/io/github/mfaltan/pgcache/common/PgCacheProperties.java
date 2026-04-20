@@ -1,14 +1,11 @@
-package io.github.mfaltan.pgcache.core.config;
+package io.github.mfaltan.pgcache.common;
 
-import io.github.mfaltan.pgcache.core.StoreProperties;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@ConfigurationProperties(prefix = "pg-cache")
 @Getter
 @Setter
 public class PgCacheProperties {

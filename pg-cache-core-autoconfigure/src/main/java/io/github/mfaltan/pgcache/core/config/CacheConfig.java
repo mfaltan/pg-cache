@@ -7,7 +7,6 @@ import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
 import io.github.mfaltan.pgcache.core.PgCacheManager;
 import io.github.mfaltan.pgcache.core.PgStoreFactory;
 import io.github.mfaltan.pgcache.core.StoreFactory;
-import io.github.mfaltan.pgcache.core.StoreProperties;
 import io.github.mfaltan.pgcache.core.ValueSerializer;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
@@ -27,11 +26,9 @@ import org.springframework.context.annotation.Role;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
-@EnableConfigurationProperties(PgCacheProperties.class)
+@EnableConfigurationProperties(PgCacheConfigurationProperties.class)
 public class CacheConfig extends AbstractCachingConfiguration {
 
     @Bean
@@ -40,18 +37,18 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    DataSource pgCacheUserReadDataSource(PgCacheProperties properties) {
+    DataSource pgCacheUserReadDataSource(PgCacheConfigurationProperties properties) {
         return HikariDataSourceFactory.create(properties.getUserReadDataSource());
     }
 
     @Bean
-    DataSource pgCacheUserWriteDataSource(PgCacheProperties properties) {
+    DataSource pgCacheUserWriteDataSource(PgCacheConfigurationProperties properties) {
         return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
     }
 
     @Bean(name = "pgCacheAdminDataSource")
-    DataSource pgCacheAdminDataSource(PgCacheProperties properties) {
-        PgCacheProperties.DataSourceProperties props = properties.getAdminDatasource();
+    DataSource pgCacheAdminDataSource(PgCacheConfigurationProperties properties) {
+        var props = properties.getAdminDatasource();
         PGSimpleDataSource ds = new org.postgresql.ds.PGSimpleDataSource();
         ds.setURL(props.getUrl());
         ds.setUser(props.getUsername());
@@ -60,7 +57,7 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    StoreFactory storeFactory(PgCacheProperties properties,
+    StoreFactory storeFactory(PgCacheConfigurationProperties properties,
                               @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
                               @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
                               @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
@@ -86,15 +83,13 @@ public class CacheConfig extends AbstractCachingConfiguration {
     CacheManager cacheManager(StoreFactory storeFactory,
                               ValueSerializer valueSerializer,
                               CacheResilienceFactory cacheResilienceFactory,
-                              PgCacheProperties properties) {
-        Map<String, StoreProperties> caches = new HashMap<>(properties.getCaches());
+                              PgCacheConfigurationProperties properties) {
+
         return PgCacheManager.builder()
                              .storeFactory(storeFactory)
                              .serializer(valueSerializer)
                              .cacheResilienceFactory(cacheResilienceFactory)
-                             .storesProperties(caches)
-                             .cleanupEnabled(properties.isCleanupEnabled())
-                             .cleanupLimit(properties.getCleanupLimit())
+                             .properties(properties)
                              .build();
     }
 

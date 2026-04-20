@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
@@ -46,23 +47,24 @@ class PgCacheManagerTest {
     private final CacheResilience cacheResilience = new NoOpCacheResilience();
 
     @Mock
-    private Map<String, StoreProperties> storesProperties = new HashMap<>();
+    private PgCacheProperties pgCacheProperties;
+
+    @Mock
+    private Map<String, PgCacheProperties.CacheProperties> cachesProperties = new HashMap<>();
 
     @Mock
     private Store store, store2;
 
     @Mock
-    private StoreProperties storeProperties;
+    private PgCacheProperties.CacheProperties cacheProperties;
 
     @BeforeEach
     void init() {
         cacheManager = PgCacheManager.builder()
                                      .storeFactory(storeFactory)
-                                     .storesProperties(storesProperties)
+                                     .properties(pgCacheProperties)
                                      .cacheResilienceFactory(cacheResilienceFactory)
                                      .serializer(serializer)
-                                     .cleanupEnabled(false)
-                                     .cleanupLimit(0)
                                      .build();
     }
 
@@ -70,8 +72,9 @@ class PgCacheManagerTest {
     void should_create_new_cache_when_does_not_exist() {
         // GIVEN
         var expectedCache = createCache();
-        when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
-        when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
+        when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
+        when(cachesProperties.get(CACHE_NAME_1)).thenReturn(cacheProperties);
+        when(storeFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(store);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
 
         // WHEN
@@ -79,7 +82,7 @@ class PgCacheManagerTest {
 
         // THEN
         assertThat(actual).isEqualTo(expectedCache);
-        verifyNoInteractions(storeProperties);
+        verifyNoInteractions(cacheProperties);
     }
 
     @Test
@@ -87,7 +90,8 @@ class PgCacheManagerTest {
         // GIVEN
         var expectedCache = createCache();
 
-        when(storesProperties.get(CACHE_NAME_1)).thenReturn(null);
+        when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
+        when(cachesProperties.get(CACHE_NAME_1)).thenReturn(null);
         when(storeFactory.initializeStore(CACHE_NAME_1, null)).thenReturn(store);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
 
@@ -104,10 +108,11 @@ class PgCacheManagerTest {
     @Test
     void should_create_different_caches_for_different_names() {
         // GIVEN
-        when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
-        when(storesProperties.get(CACHE_NAME_2)).thenReturn(storeProperties);
-        when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
-        when(storeFactory.initializeStore(CACHE_NAME_2, storeProperties)).thenReturn(store2);
+        when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
+        when(cachesProperties.get(CACHE_NAME_1)).thenReturn(cacheProperties);
+        when(cachesProperties.get(CACHE_NAME_2)).thenReturn(cacheProperties);
+        when(storeFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(store);
+        when(storeFactory.initializeStore(CACHE_NAME_2, cacheProperties)).thenReturn(store2);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
         when(cacheResilienceFactory.create(CACHE_NAME_2)).thenReturn(cacheResilience);
 
@@ -141,8 +146,9 @@ class PgCacheManagerTest {
     @Test
     void should_create_only_one_cache_concurrently() throws InterruptedException {
 
-        when(storesProperties.get(CACHE_NAME_1)).thenReturn(storeProperties);
-        when(storeFactory.initializeStore(CACHE_NAME_1, storeProperties)).thenReturn(store);
+        when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
+        when(cachesProperties.get(CACHE_NAME_1)).thenReturn(cacheProperties);
+        when(storeFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(store);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
 
         int threads = 20;
@@ -172,7 +178,7 @@ class PgCacheManagerTest {
             done.await();
 
             assertThat(results).hasSize(1);
-            verify(storeFactory, times(1)).initializeStore(CACHE_NAME_1, storeProperties); //TEST
+            verify(storeFactory, times(1)).initializeStore(CACHE_NAME_1, cacheProperties); //TEST
         }
     }
 

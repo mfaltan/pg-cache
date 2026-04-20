@@ -2,6 +2,7 @@ package io.github.mfaltan.pgcache.core;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,9 +63,11 @@ class SimplePgOperationsIT {
         }
 
         var valueSerializer = new JacksonSerializer(new ObjectMapper());
-        var storesProperties = new HashMap<String, StoreProperties>();
+        var pgCachePropertes = new PgCacheProperties();
+        pgCachePropertes.setCleanupEnabled(false);
+        pgCachePropertes.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
-        var cacheManager = new PgCacheManager(factory, valueSerializer, cacheResilienceFactory, storesProperties, false, 10);
+        var cacheManager = new PgCacheManager(factory, valueSerializer, cacheResilienceFactory, pgCachePropertes);
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {

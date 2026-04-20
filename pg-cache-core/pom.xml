@@ -19,6 +19,11 @@
     <dependencies>
         <dependency>
             <groupId>io.github.mfaltan</groupId>
+            <artifactId>pg-cache-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.mfaltan</groupId>
             <artifactId>pg-cache-resilience</artifactId>
         </dependency>
 
