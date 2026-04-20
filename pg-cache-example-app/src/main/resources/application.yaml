@@ -14,6 +14,7 @@ pg-cache:
     username: pgcache-admin
     connectionTimeoutMs: 2000
     #password:
+    maximum-pool-size: 1
 
   user-read-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache

@@ -10,7 +10,6 @@ import io.github.mfaltan.pgcache.core.StoreFactory;
 import io.github.mfaltan.pgcache.core.ValueSerializer;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -43,17 +42,12 @@ public class CacheConfig extends AbstractCachingConfiguration {
 
     @Bean
     DataSource pgCacheUserWriteDataSource(PgCacheConfigurationProperties properties) {
-        return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
+        return HikariDataSourceFactory.create(properties.getAdminDatasource());
     }
 
-    @Bean(name = "pgCacheAdminDataSource")
+    @Bean
     DataSource pgCacheAdminDataSource(PgCacheConfigurationProperties properties) {
-        var props = properties.getAdminDatasource();
-        PGSimpleDataSource ds = new org.postgresql.ds.PGSimpleDataSource();
-        ds.setURL(props.getUrl());
-        ds.setUser(props.getUsername());
-        ds.setPassword(props.getPassword());
-        return ds;
+        return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
     }
 
     @Bean
