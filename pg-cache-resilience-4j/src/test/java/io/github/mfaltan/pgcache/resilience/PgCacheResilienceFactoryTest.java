@@ -6,9 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -34,14 +36,16 @@ class PgCacheResilienceFactoryTest {
     @Test
     void should_create_pg_cache_resilience_with_correct_circuit_breaker() {
 
+        // GIVEN
         var cache = "cache";
         var cbName = PREFIX + "-" + cache;
 
-        // GIVEN
+        var spiedFactory = Mockito.spy(factory);
+        doNothing().when(spiedFactory).configureMonitoring(circuitBreaker, cbName);
         when(registry.circuitBreaker(cbName)).thenReturn(circuitBreaker);
 
         // WHEN
-        var result = factory.create(cache);
+        var result = spiedFactory.create(cache);
 
         // THEN
         assertThat(result).isInstanceOf(PgCacheResilience.class);

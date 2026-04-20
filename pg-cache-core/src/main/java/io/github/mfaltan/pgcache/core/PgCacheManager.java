@@ -1,8 +1,11 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
+import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,6 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
+@Slf4j
 @RequiredArgsConstructor
 @Builder
 public class PgCacheManager implements CacheManager {
@@ -36,18 +40,8 @@ public class PgCacheManager implements CacheManager {
                 if (caches.containsKey(name)) {
                     return caches.get(name);
                 }
-                var storeProp = storesProperties.get(name);
-                var store = storeFactory.initializeStore(name, storeProp);
                 var cacheResilience = cacheResilienceFactory.create(name);
-
-                var cache = PgCache.builder()
-                                   .name(name)
-                                   .serializer(serializer)
-                                   .store(store)
-                                   .cacheResilience(cacheResilience)
-                                   .build();
-                caches.put(name, cache);
-                return cache;
+                return cacheResilience.execute(() -> createAndRegisterRealCache(name, cacheResilience), () -> createNoOpCache(name));
             }
         }
     }
@@ -66,5 +60,27 @@ public class PgCacheManager implements CacheManager {
         if (b != null && b) {
             caches.values().forEach(c -> c.evictExpired(cleanupLimit));
         }
+    }
+
+    private PgCache createAndRegisterRealCache(String name, CacheResilience cacheResilience) {
+        var storeProp = storesProperties.get(name);
+        var store = storeFactory.initializeStore(name, storeProp);
+        var cache = PgCache.builder()
+                           .name(name)
+                           .serializer(serializer)
+                           .store(store)
+                           .cacheResilience(cacheResilience)
+                           .build();
+        caches.put(name, cache);
+        return cache;
+    }
+
+    private PgCache createNoOpCache(String name) {
+        return PgCache.builder()
+                      .name(name)
+                      .serializer(serializer)
+                      .store(new NoOpStore())
+                      .cacheResilience(new NoOpCacheResilience())
+                      .build();
     }
 }

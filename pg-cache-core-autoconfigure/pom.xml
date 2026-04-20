@@ -20,7 +20,6 @@
         <dependency>
             <groupId>io.github.mfaltan</groupId>
             <artifactId>pg-cache-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

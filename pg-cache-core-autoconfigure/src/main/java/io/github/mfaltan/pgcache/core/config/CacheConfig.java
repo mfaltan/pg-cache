@@ -40,12 +40,12 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    public DataSource pgCacheUserReadDataSource(PgCacheProperties properties) {
+    DataSource pgCacheUserReadDataSource(PgCacheProperties properties) {
         return HikariDataSourceFactory.create(properties.getUserReadDataSource());
     }
 
     @Bean
-    public DataSource pgCacheUserWriteDataSource(PgCacheProperties properties) {
+    DataSource pgCacheUserWriteDataSource(PgCacheProperties properties) {
         return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
     }
 

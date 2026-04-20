@@ -28,3 +28,23 @@ pg-cache:
     connectionTimeoutMs: 2000
     #password:
     maximum-pool-size: 2
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      pg-cache:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+    instances:
+      pg-cache-cache1:
+        baseConfig: pg-cache
+        slidingWindowSize: 1
+        minimumNumberOfCalls: 1
+        failureRateThreshold: 100
+        waitDurationInOpenState: 60s
+      pg-cache-cache2:
+        baseConfig: pg-cache
