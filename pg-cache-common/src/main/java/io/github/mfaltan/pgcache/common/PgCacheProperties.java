@@ -39,6 +39,11 @@ public class PgCacheProperties {
     private final AsyncProperties async = new AsyncProperties();
 
     /**
+     * Scheduled jobs will create unique UUID and put it to MDC context under this key
+     */
+    private String traceIdKey = "traceId";
+
+    /**
      * Admin datasource (DDL, schema management)
      */
     private final DataSourceProperties adminDatasource = new DataSourceProperties();

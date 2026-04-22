@@ -8,7 +8,9 @@ import javax.sql.DataSource;
 
 public class HikariDataSourceFactory {
 
-    private HikariDataSourceFactory() {}
+    private HikariDataSourceFactory() {
+
+    }
 
     public static DataSource create(DataSourceProperties props) {
 

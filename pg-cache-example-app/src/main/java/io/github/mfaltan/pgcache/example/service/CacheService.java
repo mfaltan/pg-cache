@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+import static io.github.mfaltan.pgcache.common.Constants.MARKER;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -24,7 +26,7 @@ public class CacheService {
 
     @CacheEvict(value = Constants.CACHE_1, key = "#p0 + '-' + #p1")
     public void evictCache(int age, String name) {
-        log.info("Age {} and name {} removed from cache1", age, name);
+        log.info(MARKER, "Age [{}] and name [{}] removed from cache1", age, name);
     }
 
     public List<UUID> getCache(CacheRequest cacheRequest) {
@@ -33,7 +35,7 @@ public class CacheService {
 
     @CacheEvict(value = Constants.CACHE_2)
     public void evictCache(CacheRequest cacheRequest) {
-        log.info("{} removed from cache2", cacheRequest);
+        log.info(MARKER, "[{}] removed from cache2", cacheRequest);
 
     }
 }

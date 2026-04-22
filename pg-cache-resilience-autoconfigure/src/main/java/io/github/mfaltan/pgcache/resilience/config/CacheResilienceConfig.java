@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import static io.github.mfaltan.pgcache.common.Constants.MARKER;
+
 @Configuration
 @Slf4j
 public class CacheResilienceConfig {
@@ -18,7 +20,7 @@ public class CacheResilienceConfig {
     @Primary
     CacheResilienceFactory pgCacheResilienceFactory(CircuitBreakerRegistry circuitBreakerRegistry,
                                                     @Value("${pg-cache.resilience.prefix:pg-cache}") String prefix) {
-        log.info("Pg-cache resilience enabled");
+        log.info(MARKER, "Pg-cache resilience enabled, overriding noOp resilience");
         return new PgCacheResilienceFactory(circuitBreakerRegistry, prefix);
     }
 }

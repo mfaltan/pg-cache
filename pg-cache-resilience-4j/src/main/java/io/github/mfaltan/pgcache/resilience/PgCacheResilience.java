@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.resilience;
 
+import io.github.mfaltan.pgcache.common.Constants;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class PgCacheResilience implements CacheResilience {
             return fallback.get();
         } catch (Exception e) {
             // real failure → log warning
-            log.warn("Cache backend failure", e);
+            log.warn(Constants.MARKER, "Cache backend failure, caught by circuit breaker. Executing fallback method.", e);
             return fallback.get();
         }
     }
@@ -38,7 +39,7 @@ public class PgCacheResilience implements CacheResilience {
             fallback.run();
         } catch (Exception e) {
             // real failure → log warning
-            log.warn("Cache backend failure", e);
+            log.warn(Constants.MARKER, "Cache backend failure, caught by circuit breaker. Executing fallback method.", e);
             fallback.run();
         }
     }

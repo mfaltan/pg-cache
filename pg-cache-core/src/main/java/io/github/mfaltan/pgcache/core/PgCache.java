@@ -1,11 +1,13 @@
 package io.github.mfaltan.pgcache.core;
 
 import com.google.common.hash.Hashing;
+import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.concurrent.Callable;
@@ -13,6 +15,7 @@ import java.util.concurrent.Callable;
 @Builder
 @RequiredArgsConstructor
 @EqualsAndHashCode(exclude = "store")
+@Slf4j
 public class PgCache implements EvictableCache, TypedCache {
     private final String name;
     private final ValueSerializer serializer;
@@ -52,6 +55,7 @@ public class PgCache implements EvictableCache, TypedCache {
         }
         T value;
         try {
+            log.debug(Constants.MARKER, "About to call loader for key [{}] and cache [{}]", key, name);
             value = valueLoader.call();
         } catch (Exception e) {
             throw new PgCacheCallerException(e);
@@ -64,6 +68,7 @@ public class PgCache implements EvictableCache, TypedCache {
     public void put(Object key, Object value) {
         var keyEntry = keyToKeyEntry(key);
         var executor = executorHolder.getWriteExecutor();
+        log.debug(Constants.MARKER, "About to put value with key [{}] to cache [{}]", key, name);
         executor.execute(() -> cacheResilience.execute(() -> putInternal(keyEntry, value), () -> {
         }));
 
@@ -73,6 +78,7 @@ public class PgCache implements EvictableCache, TypedCache {
     public void evict(Object key) {
         var keyEntry = keyToKeyEntry(key);
         var executor = executorHolder.getWriteExecutor();
+        log.debug(Constants.MARKER, "About to evict value with key [{}] from cache [{}]", key, name);
         executor.execute(() -> cacheResilience.execute(() -> evictInternal(keyEntry), () -> {
         }));
     }
@@ -80,6 +86,7 @@ public class PgCache implements EvictableCache, TypedCache {
     @Override
     public void clear() {
         var executor = executorHolder.getClearExecutor();
+        log.debug(Constants.MARKER, "About to clear cache [{}]", name);
         executor.execute(() -> cacheResilience.execute(store::clear, () -> {
         }));
     }
@@ -87,6 +94,7 @@ public class PgCache implements EvictableCache, TypedCache {
     @Override
     public void evictExpired(int limit) {
         var executor = executorHolder.getWriteExecutor();
+        log.debug(Constants.MARKER, "About to evict expired from cache [{}]", name);
         executor.execute(() -> cacheResilience.execute(() -> store.evictExpired(limit), () -> {
         }));
     }

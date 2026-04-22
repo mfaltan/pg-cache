@@ -8,6 +8,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import static io.github.mfaltan.pgcache.common.Constants.MARKER;
+
 /**
  * Auto-configures pg-cache when included via starter.
  */
@@ -24,6 +26,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class PgCacheCoreAutoConfiguration {
 
     public PgCacheCoreAutoConfiguration() {
-        log.info("Pg-cache core enabled");
+        log.info(MARKER, "Pg-cache core enabled");
     }
 }

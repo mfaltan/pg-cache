@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.resilience;
 
+import io.github.mfaltan.pgcache.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Supplier;
@@ -11,7 +12,7 @@ public class NoOpCacheResilience implements CacheResilience{
         try {
             return primary.get();
         } catch (RuntimeException e) {
-            log.warn("Problem with pgCache", e);
+            log.warn(Constants.MARKER, "Problem with pgCache, returning null", e);
             return null;
         }
     }
@@ -21,7 +22,7 @@ public class NoOpCacheResilience implements CacheResilience{
         try {
             primary.run();
         } catch (RuntimeException e) {
-            log.warn("Problem with pgCache", e);
+            log.warn(Constants.MARKER, "Problem with pgCache, returning null", e);
         }
     }
 }
