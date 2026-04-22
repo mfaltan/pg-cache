@@ -67,7 +67,8 @@ class SimplePgOperationsIT {
         pgCachePropertes.setCleanupEnabled(false);
         pgCachePropertes.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
-        var cacheManager = new PgCacheManager(factory, valueSerializer, cacheResilienceFactory, pgCachePropertes);
+        var executorHolder = new PgExecutorHolder(pgCachePropertes.getAsync());
+        var cacheManager = new PgCacheManager(executorHolder, factory, valueSerializer, cacheResilienceFactory, pgCachePropertes);
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {

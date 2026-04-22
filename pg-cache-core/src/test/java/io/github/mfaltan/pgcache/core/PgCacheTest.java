@@ -40,6 +40,9 @@ class PgCacheTest {
     private PgCache cache;
 
     @Mock
+    private ExecutorHolder executorHolder;
+
+    @Mock
     private ValueSerializer serializer;
 
     @Mock
@@ -70,6 +73,7 @@ class PgCacheTest {
     void setUp() {
         cache = PgCache.builder()
                        .name(CACHE_NAME)
+                       .executorHolder(executorHolder)
                        .serializer(serializer)
                        .store(store)
                        .cacheResilience(cacheResilience)
@@ -189,6 +193,7 @@ class PgCacheTest {
     void should_evict_value() {
         // GIVEN
         mockCacheResilienceVoid();
+        when(executorHolder.getWriteExecutor()).thenReturn(Runnable::run);
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
 
@@ -209,6 +214,7 @@ class PgCacheTest {
     @Test
     void should_clear_cache() {
         // GIVEN
+        when(executorHolder.getClearExecutor()).thenReturn(Runnable::run);
         mockCacheResilienceVoid();
 
         // WHEN
@@ -221,6 +227,7 @@ class PgCacheTest {
     @Test
     void should_load_value_with_callable_and_cache_it() throws Exception {
         // GIVEN
+        when(executorHolder.getWriteExecutor()).thenReturn(Runnable::run);
         mockCacheResilience();
         mockCacheResilienceVoid();
 
@@ -307,6 +314,7 @@ class PgCacheTest {
     @Test
     void should_evict_expired_1000() {
         // GIVEN
+        when(executorHolder.getWriteExecutor()).thenReturn(Runnable::run);
         mockCacheResilienceVoid();
 
         var limit = 1000;

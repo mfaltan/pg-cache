@@ -21,6 +21,7 @@ import java.util.Map;
 @Builder
 public class PgCacheManager implements CacheManager {
 
+    private final ExecutorHolder executorHolder;
     private final StoreFactory storeFactory;
     private final ValueSerializer serializer;
     private final CacheResilienceFactory cacheResilienceFactory;
@@ -61,6 +62,7 @@ public class PgCacheManager implements CacheManager {
         var store = storeFactory.initializeStore(name, storeProp);
         var cache = PgCache.builder()
                            .name(name)
+                           .executorHolder(executorHolder)
                            .serializer(serializer)
                            .store(store)
                            .cacheResilience(cacheResilience)

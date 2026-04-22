@@ -34,13 +34,14 @@ public class PgCacheProperties {
     /**
      * Per-cache configuration
      */
-    private Map<String, CacheProperties> caches = new HashMap<>();
+    private final Map<String, CacheProperties> caches = new HashMap<>();
 
+    private final AsyncProperties async = new AsyncProperties();
 
     /**
      * Admin datasource (DDL, schema management)
      */
-    private DataSourceProperties adminDatasource = new DataSourceProperties();
+    private final DataSourceProperties adminDatasource = new DataSourceProperties();
     private final DataSourceProperties userReadDataSource = new DataSourceProperties();
     private final DataSourceProperties userWriteDataSource = new DataSourceProperties();
 
@@ -64,5 +65,15 @@ public class PgCacheProperties {
         private long connectionTimeoutMs = 30000;
         private long idleTimeoutMs = 600000;
         private long maxLifetimeMs = 1800000;
+    }
+
+    @Getter
+    @Setter
+    public static class AsyncProperties {
+        private boolean enabled = false;
+        private int writeThreads = 10;
+        private int writeQueue = 100;
+        private int clearThreads = 10;
+        private int clearQueue = 100;
     }
 }
