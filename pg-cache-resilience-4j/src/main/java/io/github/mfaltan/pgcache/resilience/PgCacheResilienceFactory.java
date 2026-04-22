@@ -5,6 +5,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static io.github.mfaltan.pgcache.common.Constants.MARKER;
+
 @RequiredArgsConstructor
 @Slf4j
 public class PgCacheResilienceFactory implements CacheResilienceFactory {
@@ -20,7 +22,7 @@ public class PgCacheResilienceFactory implements CacheResilienceFactory {
 
         configureMonitoring(cb, cbName);
 
-        log.info("Circuit breaker {} registered", cbName);
+        log.info(MARKER, "Circuit breaker [{}] registered", cbName);
         return new PgCacheResilience(cb);
     }
 
@@ -28,7 +30,7 @@ public class PgCacheResilienceFactory implements CacheResilienceFactory {
         cb.getEventPublisher()
           .onStateTransition(event -> {
               var transition = event.getStateTransition();
-              log.info("CircuitBreaker {} transitioned from {} to {}", cbName, transition.getFromState(), transition.getToState());
+              log.debug(MARKER, "CircuitBreaker [{}] transitioned from [{}] to [{}]", cbName, transition.getFromState(), transition.getToState());
           });
     }
 }

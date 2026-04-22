@@ -8,4 +8,6 @@ import lombok.Builder;
 public record CacheRequest(
         @NotNull Integer age,
         @NotBlank String name
-) {}
+) {
+
+}

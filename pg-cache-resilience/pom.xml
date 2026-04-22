@@ -20,6 +20,11 @@
     <dependencies>
 
         <dependency>
+            <groupId>io.github.mfaltan</groupId>
+            <artifactId>pg-cache-common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

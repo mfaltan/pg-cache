@@ -1,5 +1,6 @@
 package io.github.mfaltan.pgcache.core;
 
+import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
@@ -7,6 +8,7 @@ import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,6 +17,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,12 +35,15 @@ public class PgCacheManager implements CacheManager {
     @Override
     public Cache getCache(String name) {
         if (caches.containsKey(name)) {
+            log.debug(Constants.MARKER, "Using already existing cache [{}]", name);
             return caches.get(name);
         } else {
             synchronized (this) {
                 if (caches.containsKey(name)) {
+                    log.debug(Constants.MARKER, "Using already existing cache [{}], it was created in the meantime", name);
                     return caches.get(name);
                 }
+                log.debug(Constants.MARKER, "Creating new cache [{}]", name);
                 var cacheResilience = cacheResilienceFactory.create(name);
                 return cacheResilience.execute(() -> createAndRegisterRealCache(name, cacheResilience), () -> createNoOpCache(name));
             }
@@ -51,10 +57,17 @@ public class PgCacheManager implements CacheManager {
 
     @Scheduled(cron = "${pg-cache.cleanup-cron:0 */30 * * * *}")
     public void cleanupJob() {
-        if (!properties.isCleanupEnabled()) {
-            return;
+        MDC.put(properties.getTraceIdKey(), UUID.randomUUID().toString());
+        try {
+            if (!properties.isCleanupEnabled()) {
+                log.debug(Constants.MARKER, "Cleanup job disabled");
+                return;
+            }
+            log.debug(Constants.MARKER, "About to execute cleanup job for caches [{}]", caches.keySet());
+            caches.values().forEach(c -> c.evictExpired(properties.getCleanupLimit()));
+        } finally {
+            MDC.clear();
         }
-        caches.values().forEach(c -> c.evictExpired(properties.getCleanupLimit()));
     }
 
     private PgCache createAndRegisterRealCache(String name, CacheResilience cacheResilience) {

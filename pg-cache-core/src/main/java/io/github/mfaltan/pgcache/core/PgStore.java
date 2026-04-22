@@ -1,6 +1,7 @@
 package io.github.mfaltan.pgcache.core;
 
 
+import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -13,6 +14,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+
+import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,6 +34,8 @@ public class PgStore implements Store {
 
     @Override
     public void put(Long key, CacheEntry entry) {
+        log.debug(Constants.MARKER, "Put value for key [{}] to cache [{}]", key, cacheName);
+
         String sql = """
                 INSERT INTO %s (name, key, raw_key, value, expires_at)
                 VALUES (?, ?, ?, ?, ?)
@@ -58,6 +63,7 @@ public class PgStore implements Store {
 
     @Override
     public CacheEntry get(Long key) {
+        log.debug(Constants.MARKER, "Get key [{}] from cache [{}]", key, cacheName);
 
         String sql = """
                 SELECT raw_key, value, expires_at
@@ -91,6 +97,8 @@ public class PgStore implements Store {
 
     @Override
     public void evictExpired(int limit) {
+        log.debug(Constants.MARKER, "Evicting expired entries from cache [{}]", cacheName);
+
         var sql = """
                 DELETE FROM %s
                 WHERE ctid IN (
@@ -110,7 +118,7 @@ public class PgStore implements Store {
                 ps.setInt(2, limit);
                 ps.executeUpdate();
 
-                log.info("Part of the expired entries for cache {} was evicted", cacheName);
+                log.info(MARKER, "Part of the expired entries for cache [{}] was evicted", cacheName);
             }
         } catch (SQLException e) {
             throw new PgCacheStoreException("Limited evict failed", e);
@@ -119,6 +127,8 @@ public class PgStore implements Store {
 
     @Override
     public void remove(Long key) {
+        log.debug(Constants.MARKER, "Removing key [{}] from cache [{}]", key, cacheName);
+
         String sql = """
                 DELETE FROM %s
                 WHERE name = ? AND key = ?
@@ -139,7 +149,7 @@ public class PgStore implements Store {
 
     @Override
     public void clear() {
-        log.info("Truncating whole partition {}", tableName);
+        log.info(MARKER, "Truncating whole partition [{}]", tableName);
         String sql = "TRUNCATE TABLE " + tableName;
 
         try (Connection conn = adminDataSource.getConnection();

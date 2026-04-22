@@ -12,6 +12,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import static io.github.mfaltan.pgcache.common.Constants.MARKER;
+
 @RequiredArgsConstructor
 @Builder
 @Slf4j
@@ -37,7 +39,7 @@ public class PgStoreFactory implements StoreFactory {
         var ttlSeconds = storeProperties != null ? storeProperties.getTtlSeconds() : null;
 
         String partitionName = tableName + "_" + name;
-        log.info("Initializing pg cache partition {}", partitionName);
+        log.info(MARKER, "Initializing pg cache partition [{}]", partitionName);
 
         String partitionSql = """
                 CREATE UNLOGGED TABLE IF NOT EXISTS %s
@@ -65,7 +67,7 @@ public class PgStoreFactory implements StoreFactory {
     }
 
     private void createTableIfNotExists() throws SQLException {
-        log.info("Initializing pg cache table");
+        log.info(MARKER, "Initializing pg cache table");
 
         String tableSql = """
                 CREATE TABLE IF NOT EXISTS %s (
