@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.serializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
 
 @RequiredArgsConstructor
 @Slf4j
-public class JacksonSerializer implements ValueSerializer {
+public class PgCacheSerializer implements CacheValueSerializer {
     private final ObjectMapper mapper;
 
     @Override

@@ -1,12 +1,13 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.store;
 
 import io.github.mfaltan.pgcache.common.Constants;
+import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode
 @Slf4j
-public class NoOpStore implements Store {
+public class NoOpCacheStore implements CacheStore {
 
 
     @Override

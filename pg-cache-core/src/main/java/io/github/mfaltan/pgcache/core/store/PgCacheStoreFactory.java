@@ -1,7 +1,8 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.store;
 
 import io.github.mfaltan.pgcache.common.StoreProperties;
-import io.github.mfaltan.pgcache.core.exception.PgStoreFactoryException;
+import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
+import io.github.mfaltan.pgcache.core.exception.PgCacheStoreFactoryException;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 @RequiredArgsConstructor
 @Builder
 @Slf4j
-public class PgStoreFactory implements StoreFactory {
+public class PgCacheStoreFactory implements CacheStoreFactory {
     private final DataSource adminDataSource;
     private final DataSource userReadDataSource;
     private final DataSource userWriteDataSource;
@@ -30,12 +31,12 @@ public class PgStoreFactory implements StoreFactory {
         try {
             createTableIfNotExists();
         } catch (SQLException e) {
-            throw new PgStoreFactoryException("Error when initializing pg store", e);
+            throw new PgCacheStoreFactoryException("Error when initializing pg store", e);
         }
     }
 
     @Override
-    public Store initializeStore(String name, StoreProperties storeProperties) {
+    public CacheStore initializeStore(String name, StoreProperties storeProperties) {
         var ttlSeconds = storeProperties != null ? storeProperties.getTtlSeconds() : null;
 
         String partitionName = tableName + "_" + name;
@@ -52,18 +53,18 @@ public class PgStoreFactory implements StoreFactory {
 
             stmt.execute(partitionSql);
         } catch (SQLException e) {
-            throw new PgStoreFactoryException("Error when creating partition", e);
+            throw new PgCacheStoreFactoryException("Error when creating partition", e);
         }
 
-        return PgStore.builder()
-                      .adminDataSource(adminDataSource)
-                      .readDataSource(userReadDataSource)
-                      .writeDataSource(userWriteDataSource)
-                      .timeProvider(timeProvider)
-                      .cacheName(name)
-                      .tableName(partitionName)
-                      .ttlSeconds(ttlSeconds != null ? ttlSeconds : defaultTtlSeconds)
-                      .build();
+        return PgCacheStore.builder()
+                           .adminDataSource(adminDataSource)
+                           .readDataSource(userReadDataSource)
+                           .writeDataSource(userWriteDataSource)
+                           .timeProvider(timeProvider)
+                           .cacheName(name)
+                           .tableName(partitionName)
+                           .ttlSeconds(ttlSeconds != null ? ttlSeconds : defaultTtlSeconds)
+                           .build();
     }
 
     private void createTableIfNotExists() throws SQLException {

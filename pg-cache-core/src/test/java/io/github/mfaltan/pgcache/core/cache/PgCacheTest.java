@@ -1,9 +1,14 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.cache;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import io.github.mfaltan.pgcache.core.domain.CacheEntry;
+import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
+import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
+import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
+import io.github.mfaltan.pgcache.core.store.CacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,13 +45,13 @@ class PgCacheTest {
     private PgCache cache;
 
     @Mock
-    private ExecutorHolder executorHolder;
+    private CacheExecutorHolder cacheExecutorHolder;
 
     @Mock
-    private ValueSerializer serializer;
+    private CacheValueSerializer serializer;
 
     @Mock
-    private Store store;
+    private CacheStore cacheStore;
 
     @Mock
     private Callable<String> loader;
@@ -73,9 +78,9 @@ class PgCacheTest {
     void setUp() {
         cache = PgCache.builder()
                        .name(CACHE_NAME)
-                       .executorHolder(executorHolder)
+                       .cacheExecutorHolder(cacheExecutorHolder)
                        .serializer(serializer)
-                       .store(store)
+                       .cacheStore(cacheStore)
                        .cacheResilience(cacheResilience)
                        .build();
     }
@@ -91,7 +96,7 @@ class PgCacheTest {
         var actual = cache.getNativeCache();
 
         //THEN
-        assertThat(actual).isEqualTo(store);
+        assertThat(actual).isEqualTo(cacheStore);
     }
 
     @Test
@@ -101,7 +106,7 @@ class PgCacheTest {
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.deserialize(VALUE_BYTES, type)).thenReturn(SOME_VALUE);
-        when(store.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
+        when(cacheStore.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
         when(cacheEntry.value()).thenReturn(VALUE_BYTES);
         when(cacheEntry.normalizedKey()).thenReturn(KEY_BYTES);
         when(someKey.type()).thenReturn(type);
@@ -126,7 +131,7 @@ class PgCacheTest {
         mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
-        when(store.get(SOME_LONG_KEY)).thenReturn(null);
+        when(cacheStore.get(SOME_LONG_KEY)).thenReturn(null);
 
         try (MockedStatic<Hashing> hashing = mockStatic(Hashing.class)) {
 
@@ -148,7 +153,7 @@ class PgCacheTest {
         mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
-        when(store.get(SOME_LONG_KEY)).thenReturn(null);
+        when(cacheStore.get(SOME_LONG_KEY)).thenReturn(null);
 
         try (MockedStatic<Hashing> hashing = mockStatic(Hashing.class)) {
 
@@ -171,7 +176,7 @@ class PgCacheTest {
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.deserialize(VALUE_BYTES, String.class)).thenReturn(SOME_VALUE);
-        when(store.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
+        when(cacheStore.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
         when(cacheEntry.value()).thenReturn(VALUE_BYTES);
         when(cacheEntry.normalizedKey()).thenReturn(KEY_BYTES);
 
@@ -193,7 +198,7 @@ class PgCacheTest {
     void should_evict_value() {
         // GIVEN
         mockCacheResilienceVoid();
-        when(executorHolder.getWriteExecutor()).thenReturn(Runnable::run);
+        when(cacheExecutorHolder.getWriteExecutor()).thenReturn(Runnable::run);
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
 
@@ -207,31 +212,31 @@ class PgCacheTest {
             cache.evict(someKey);
 
             // THEN
-            verify(store).remove(SOME_LONG_KEY);
+            verify(cacheStore).remove(SOME_LONG_KEY);
         }
     }
 
     @Test
     void should_clear_cache() {
         // GIVEN
-        when(executorHolder.getClearExecutor()).thenReturn(Runnable::run);
+        when(cacheExecutorHolder.getClearExecutor()).thenReturn(Runnable::run);
         mockCacheResilienceVoid();
 
         // WHEN
         cache.clear();
 
         // THEN
-        verify(store).clear();
+        verify(cacheStore).clear();
     }
 
     @Test
     void should_load_value_with_callable_and_cache_it() throws Exception {
         // GIVEN
-        when(executorHolder.getWriteExecutor()).thenReturn(Runnable::run);
+        when(cacheExecutorHolder.getWriteExecutor()).thenReturn(Runnable::run);
         mockCacheResilience();
         mockCacheResilienceVoid();
 
-        var entry = createCacheEntry(KEY_BYTES, VALUE_BYTES);
+        var entry = createCacheEntry();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
         when(serializer.serialize(SOME_VALUE)).thenReturn(VALUE_BYTES);
@@ -250,7 +255,7 @@ class PgCacheTest {
             // THEN
             assertThat(first).isEqualTo(SOME_VALUE);
             verify(loader).call();
-            verify(store).put(SOME_LONG_KEY, entry);
+            verify(cacheStore).put(SOME_LONG_KEY, entry);
         }
     }
 
@@ -260,7 +265,7 @@ class PgCacheTest {
         mockCacheResilience();
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
-        when(store.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
+        when(cacheStore.get(SOME_LONG_KEY)).thenReturn(cacheEntry);
         when(someKey.type()).thenReturn(type);
         when(cacheEntry.value()).thenReturn(VALUE_BYTES);
         when(cacheEntry.normalizedKey()).thenReturn(KEY_BYTES);
@@ -277,7 +282,7 @@ class PgCacheTest {
             // THEN
             assertThat(actual).isEqualTo(SOME_VALUE);
             verifyNoInteractions(loader);
-            verify(store, times(0)).put(anyLong(), any(CacheEntry.class));
+            verify(cacheStore, times(0)).put(anyLong(), any(CacheEntry.class));
         }
     }
 
@@ -289,7 +294,7 @@ class PgCacheTest {
         when(someKey.rawKey()).thenReturn(SOME_KEY);
         var e = new RuntimeException();
         when(serializer.serialize(SOME_KEY)).thenReturn(KEY_BYTES);
-        when(store.get(SOME_LONG_KEY)).thenReturn(null);
+        when(cacheStore.get(SOME_LONG_KEY)).thenReturn(null);
         when(loader.call()).thenThrow(e);
 
         try (MockedStatic<Hashing> hashing = mockStatic(Hashing.class)) {
@@ -314,7 +319,7 @@ class PgCacheTest {
     @Test
     void should_evict_expired_1000() {
         // GIVEN
-        when(executorHolder.getWriteExecutor()).thenReturn(Runnable::run);
+        when(cacheExecutorHolder.getWriteExecutor()).thenReturn(Runnable::run);
         mockCacheResilienceVoid();
 
         var limit = 1000;
@@ -323,15 +328,14 @@ class PgCacheTest {
         cache.evictExpired(limit);
 
         // THEN
-        verify(store).evictExpired(limit);
+        verify(cacheStore).evictExpired(limit);
     }
 
-    private static CacheEntry createCacheEntry(byte[] normalizedKey, byte[] serializedValue) {
+    private static CacheEntry createCacheEntry() {
         return CacheEntry.builder()
-                         .normalizedKey(normalizedKey)
-                         .value(serializedValue)
+                         .normalizedKey(KEY_BYTES)
+                         .value(VALUE_BYTES)
                          .build();
-
     }
 
     @SuppressWarnings("unchecked")

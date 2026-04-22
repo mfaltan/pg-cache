@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.cache;
 
 import org.springframework.cache.Cache;
 

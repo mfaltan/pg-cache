@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.domain;
 
 import org.junit.jupiter.api.Test;
 
