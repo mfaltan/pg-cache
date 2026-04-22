@@ -2,16 +2,16 @@ package io.github.mfaltan.pgcache.core.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.common.Constants;
-import io.github.mfaltan.pgcache.core.CurrentDateTimeProvider;
-import io.github.mfaltan.pgcache.core.ExecutorHolder;
-import io.github.mfaltan.pgcache.core.JacksonSerializer;
+import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
+import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
 import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
 import io.github.mfaltan.pgcache.core.PgCacheManager;
-import io.github.mfaltan.pgcache.core.PgExecutorHolder;
-import io.github.mfaltan.pgcache.core.PgStoreFactory;
-import io.github.mfaltan.pgcache.core.PgCacheTaskDecorator;
-import io.github.mfaltan.pgcache.core.StoreFactory;
-import io.github.mfaltan.pgcache.core.ValueSerializer;
+import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
+import io.github.mfaltan.pgcache.core.store.PgCacheStoreFactory;
+import io.github.mfaltan.pgcache.core.executor.PgCacheTaskDecorator;
+import io.github.mfaltan.pgcache.core.store.CacheStoreFactory;
+import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -62,42 +62,42 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    StoreFactory storeFactory(PgCacheConfigurationProperties properties,
-                              @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
-                              @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
-                              @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
-                              CurrentDateTimeProvider currentDateTimeProvider) {
+    CacheStoreFactory storeFactory(PgCacheConfigurationProperties properties,
+                                   @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
+                                   @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
+                                   @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
+                                   CurrentDateTimeProvider currentDateTimeProvider) {
 
         log.info(Constants.MARKER, "Initializing pg cache store factory");
-        return PgStoreFactory.builder()
-                             .adminDataSource(adminDataSource)
-                             .userReadDataSource(userReadDataSource)
-                             .userWriteDataSource(userWriteDataSource)
-                             .tableName(properties.getTableName())
-                             .defaultTtlSeconds(properties.getDefaultTtlSeconds())
-                             .timeProvider(currentDateTimeProvider)
-                             .build();
+        return PgCacheStoreFactory.builder()
+                                  .adminDataSource(adminDataSource)
+                                  .userReadDataSource(userReadDataSource)
+                                  .userWriteDataSource(userWriteDataSource)
+                                  .tableName(properties.getTableName())
+                                  .defaultTtlSeconds(properties.getDefaultTtlSeconds())
+                                  .timeProvider(currentDateTimeProvider)
+                                  .build();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    ValueSerializer valueSerializer(ObjectMapper objectMapper) {
+    CacheValueSerializer valueSerializer(ObjectMapper objectMapper) {
         log.info(Constants.MARKER, "Initializing default pg cache Jackson serializer / deserializer");
-        return new JacksonSerializer(objectMapper);
+        return new PgCacheSerializer(objectMapper);
     }
 
     @Bean("pgCacheManager")
-    CacheManager cacheManager(ExecutorHolder executorHolder,
-                              StoreFactory storeFactory,
-                              ValueSerializer valueSerializer,
+    CacheManager cacheManager(CacheExecutorHolder cacheExecutorHolder,
+                              CacheStoreFactory cacheStoreFactory,
+                              CacheValueSerializer cacheValueSerializer,
                               CacheResilienceFactory cacheResilienceFactory,
                               PgCacheConfigurationProperties properties) {
 
         log.info(Constants.MARKER, "Initializing pg cache manager");
         return PgCacheManager.builder()
-                             .executorHolder(executorHolder)
-                             .storeFactory(storeFactory)
-                             .serializer(valueSerializer)
+                             .cacheExecutorHolder(cacheExecutorHolder)
+                             .cacheStoreFactory(cacheStoreFactory)
+                             .serializer(cacheValueSerializer)
                              .cacheResilienceFactory(cacheResilienceFactory)
                              .properties(properties)
                              .build();
@@ -128,9 +128,9 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    ExecutorHolder executorHolder(PgCacheConfigurationProperties properties,
-                                  @Qualifier("pgCacheTaskDecorator") TaskDecorator taskDecorator) {
+    CacheExecutorHolder executorHolder(PgCacheConfigurationProperties properties,
+                                       @Qualifier("pgCacheTaskDecorator") TaskDecorator taskDecorator) {
         log.info(Constants.MARKER, "Initializing pg cache executor holder");
-        return new PgExecutorHolder(properties.getAsync(), taskDecorator);
+        return new PgCacheExecutorHolder(properties.getAsync(), taskDecorator);
     }
 }

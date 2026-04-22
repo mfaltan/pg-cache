@@ -1,8 +1,8 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.executor;
 
 import java.util.concurrent.Executor;
 
-public interface ExecutorHolder {
+public interface CacheExecutorHolder {
 
     Executor getWriteExecutor();
 

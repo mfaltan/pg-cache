@@ -2,9 +2,16 @@ package io.github.mfaltan.pgcache.core;
 
 import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
+import io.github.mfaltan.pgcache.core.cache.EvictableCache;
+import io.github.mfaltan.pgcache.core.cache.PgCache;
+import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
+import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
+import io.github.mfaltan.pgcache.core.store.CacheStoreFactory;
+import io.github.mfaltan.pgcache.core.store.NoOpCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
+import jakarta.annotation.Nonnull;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,16 +31,16 @@ import java.util.UUID;
 @Builder
 public class PgCacheManager implements CacheManager {
 
-    private final ExecutorHolder executorHolder;
-    private final StoreFactory storeFactory;
-    private final ValueSerializer serializer;
+    private final CacheExecutorHolder cacheExecutorHolder;
+    private final CacheStoreFactory cacheStoreFactory;
+    private final CacheValueSerializer serializer;
     private final CacheResilienceFactory cacheResilienceFactory;
     private final PgCacheProperties properties;
 
     private final Map<String, EvictableCache> caches = new HashMap<>();
 
     @Override
-    public Cache getCache(String name) {
+    public Cache getCache(@Nonnull String name) {
         if (caches.containsKey(name)) {
             log.debug(Constants.MARKER, "Using already existing cache [{}]", name);
             return caches.get(name);
@@ -51,6 +58,7 @@ public class PgCacheManager implements CacheManager {
     }
 
     @Override
+    @Nonnull
     public Collection<String> getCacheNames() {
         return new HashSet<>(caches.keySet());
     }
@@ -72,12 +80,12 @@ public class PgCacheManager implements CacheManager {
 
     private PgCache createAndRegisterRealCache(String name, CacheResilience cacheResilience) {
         var storeProp = properties.getCaches().get(name);
-        var store = storeFactory.initializeStore(name, storeProp);
+        var store = cacheStoreFactory.initializeStore(name, storeProp);
         var cache = PgCache.builder()
                            .name(name)
-                           .executorHolder(executorHolder)
+                           .cacheExecutorHolder(cacheExecutorHolder)
                            .serializer(serializer)
-                           .store(store)
+                           .cacheStore(store)
                            .cacheResilience(cacheResilience)
                            .build();
         caches.put(name, cache);
@@ -88,7 +96,7 @@ public class PgCacheManager implements CacheManager {
         return PgCache.builder()
                       .name(name)
                       .serializer(serializer)
-                      .store(new NoOpStore())
+                      .cacheStore(new NoOpCacheStore())
                       .cacheResilience(new NoOpCacheResilience())
                       .build();
     }

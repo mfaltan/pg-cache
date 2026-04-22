@@ -1,6 +1,11 @@
 package io.github.mfaltan.pgcache.core;
 
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
+import io.github.mfaltan.pgcache.core.cache.PgCache;
+import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
+import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
+import io.github.mfaltan.pgcache.core.store.CacheStore;
+import io.github.mfaltan.pgcache.core.store.CacheStoreFactory;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
@@ -36,13 +41,13 @@ class PgCacheManagerTest {
     private PgCacheManager cacheManager;
 
     @Mock
-    private ExecutorHolder executorHolder;
+    private CacheExecutorHolder cacheExecutorHolder;
 
     @Mock
-    private StoreFactory storeFactory;
+    private CacheStoreFactory cacheStoreFactory;
 
     @Mock
-    private ValueSerializer serializer;
+    private CacheValueSerializer serializer;
 
     @Mock
     private CacheResilienceFactory cacheResilienceFactory;
@@ -56,7 +61,7 @@ class PgCacheManagerTest {
     private Map<String, PgCacheProperties.CacheProperties> cachesProperties = new HashMap<>();
 
     @Mock
-    private Store store, store2;
+    private CacheStore cacheStore, cacheStore2;
 
     @Mock
     private PgCacheProperties.CacheProperties cacheProperties;
@@ -64,8 +69,8 @@ class PgCacheManagerTest {
     @BeforeEach
     void init() {
         cacheManager = PgCacheManager.builder()
-                                     .executorHolder(executorHolder)
-                                     .storeFactory(storeFactory)
+                                     .cacheExecutorHolder(cacheExecutorHolder)
+                                     .cacheStoreFactory(cacheStoreFactory)
                                      .properties(pgCacheProperties)
                                      .cacheResilienceFactory(cacheResilienceFactory)
                                      .serializer(serializer)
@@ -78,7 +83,7 @@ class PgCacheManagerTest {
         var expectedCache = createCache();
         when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
         when(cachesProperties.get(CACHE_NAME_1)).thenReturn(cacheProperties);
-        when(storeFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(store);
+        when(cacheStoreFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(cacheStore);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
 
         // WHEN
@@ -96,7 +101,7 @@ class PgCacheManagerTest {
 
         when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
         when(cachesProperties.get(CACHE_NAME_1)).thenReturn(null);
-        when(storeFactory.initializeStore(CACHE_NAME_1, null)).thenReturn(store);
+        when(cacheStoreFactory.initializeStore(CACHE_NAME_1, null)).thenReturn(cacheStore);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
 
         // WHEN
@@ -106,7 +111,7 @@ class PgCacheManagerTest {
         // THEN
         assertThat(second).isSameAs(first);
         assertThat(first).isEqualTo(expectedCache);
-        verifyNoMoreInteractions(storeFactory);
+        verifyNoMoreInteractions(cacheStoreFactory);
     }
 
     @Test
@@ -115,8 +120,8 @@ class PgCacheManagerTest {
         when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
         when(cachesProperties.get(CACHE_NAME_1)).thenReturn(cacheProperties);
         when(cachesProperties.get(CACHE_NAME_2)).thenReturn(cacheProperties);
-        when(storeFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(store);
-        when(storeFactory.initializeStore(CACHE_NAME_2, cacheProperties)).thenReturn(store2);
+        when(cacheStoreFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(cacheStore);
+        when(cacheStoreFactory.initializeStore(CACHE_NAME_2, cacheProperties)).thenReturn(cacheStore2);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
         when(cacheResilienceFactory.create(CACHE_NAME_2)).thenReturn(cacheResilience);
 
@@ -152,7 +157,7 @@ class PgCacheManagerTest {
 
         when(pgCacheProperties.getCaches()).thenReturn(cachesProperties);
         when(cachesProperties.get(CACHE_NAME_1)).thenReturn(cacheProperties);
-        when(storeFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(store);
+        when(cacheStoreFactory.initializeStore(CACHE_NAME_1, cacheProperties)).thenReturn(cacheStore);
         when(cacheResilienceFactory.create(CACHE_NAME_1)).thenReturn(cacheResilience);
 
         int threads = 20;
@@ -182,7 +187,7 @@ class PgCacheManagerTest {
             done.await();
 
             assertThat(results).hasSize(1);
-            verify(storeFactory, times(1)).initializeStore(CACHE_NAME_1, cacheProperties); //TEST
+            verify(cacheStoreFactory, times(1)).initializeStore(CACHE_NAME_1, cacheProperties); //TEST
         }
     }
 
@@ -190,9 +195,9 @@ class PgCacheManagerTest {
         return PgCache.builder()
                       .name(CACHE_NAME_1)
                       .serializer(serializer)
-                      .store(store)
+                      .cacheStore(cacheStore)
                       .cacheResilience(cacheResilience)
-                      .executorHolder(executorHolder)
+                      .cacheExecutorHolder(cacheExecutorHolder)
                       .build();
     }
 

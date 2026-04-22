@@ -1,5 +1,6 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.domain;
 
+import jakarta.annotation.Nonnull;
 import lombok.Builder;
 
 import java.util.Arrays;
@@ -14,9 +15,9 @@ public record CacheEntry (
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CacheEntry that)) return false;
-        return Arrays.equals(normalizedKey, that.normalizedKey)
-                && Arrays.equals(value, that.value);
+        if (!(o instanceof CacheEntry(byte[] key, byte[] value1))) return false;
+        return Arrays.equals(normalizedKey, key)
+                && Arrays.equals(value, value1);
     }
 
     @Override
@@ -27,7 +28,7 @@ public record CacheEntry (
     }
 
     @Override
-    public String toString() {
+    @Nonnull public String toString() {
         return "CacheEntry{" +
                 "normalizedKey=" + Arrays.toString(normalizedKey) +
                 ", value=" + Arrays.toString(value) +

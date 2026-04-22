@@ -1,8 +1,8 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.serializer;
 
 import java.lang.reflect.Type;
 
-public interface ValueSerializer {
+public interface CacheValueSerializer {
     byte[] serialize(Object value);
     <T> T deserialize(byte[] bytes, Class<T> type);
 

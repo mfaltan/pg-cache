@@ -1,6 +1,8 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.store;
 
-public interface Store {
+import io.github.mfaltan.pgcache.core.domain.CacheEntry;
+
+public interface CacheStore {
 
     void put(Long key, CacheEntry entry);
 

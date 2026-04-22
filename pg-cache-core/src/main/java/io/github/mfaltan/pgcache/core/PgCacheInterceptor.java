@@ -1,6 +1,9 @@
 package io.github.mfaltan.pgcache.core;
 
 import io.github.mfaltan.pgcache.common.Constants;
+import io.github.mfaltan.pgcache.core.cache.TypedCache;
+import io.github.mfaltan.pgcache.core.domain.KeyEntry;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.cache.interceptor.CacheInterceptor;
@@ -12,7 +15,12 @@ import java.lang.reflect.Method;
 public class PgCacheInterceptor extends CacheInterceptor {
 
     @Override
-    protected CacheOperationContext getOperationContext(CacheOperation operation, Method method, @Nullable Object[] args, Object target, Class<?> targetClass) {
+    @Nonnull
+    protected CacheOperationContext getOperationContext(@Nonnull CacheOperation operation,
+                                                        @Nonnull Method method,
+                                                        @Nonnull Object[] args,
+                                                        @Nonnull Object target,
+                                                        @Nonnull Class<?> targetClass) {
 
         CacheOperationMetadata metadata = getCacheOperationMetadata(operation, method, targetClass);
         return new PgCacheOperationContext(metadata, args, target);

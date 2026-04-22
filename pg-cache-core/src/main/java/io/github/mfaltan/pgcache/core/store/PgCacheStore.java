@@ -1,7 +1,9 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.store;
 
 
 import io.github.mfaltan.pgcache.common.Constants;
+import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
+import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -21,7 +23,7 @@ import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 @RequiredArgsConstructor
 @Builder
 @EqualsAndHashCode
-public class PgStore implements Store {
+public class PgCacheStore implements CacheStore {
 
     private final DataSource readDataSource;
     private final DataSource writeDataSource;

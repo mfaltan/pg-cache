@@ -3,6 +3,10 @@ package io.github.mfaltan.pgcache.core;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
+import io.github.mfaltan.pgcache.core.domain.KeyEntry;
+import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
+import io.github.mfaltan.pgcache.core.store.PgCacheStoreFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,14 +43,14 @@ class SimplePgOperationsIT {
     @Test
     void should_create_table_and_index() throws Exception {
 
-        var factory = PgStoreFactory.builder()
-                                    .adminDataSource(dataSource)
-                                    .userReadDataSource(dataSource)
-                                    .userWriteDataSource(dataSource)
-                                    .tableName("cache_data")
-                                    .timeProvider(LocalDateTime::now)
-                                    .defaultTtlSeconds(20)
-                                    .build();
+        var factory = PgCacheStoreFactory.builder()
+                                         .adminDataSource(dataSource)
+                                         .userReadDataSource(dataSource)
+                                         .userWriteDataSource(dataSource)
+                                         .tableName("cache_data")
+                                         .timeProvider(LocalDateTime::now)
+                                         .defaultTtlSeconds(20)
+                                         .build();
 
         factory.init();
 
@@ -62,12 +66,12 @@ class SimplePgOperationsIT {
             assertThat(rs.next()).isTrue();
         }
 
-        var valueSerializer = new JacksonSerializer(new ObjectMapper());
+        var valueSerializer = new PgCacheSerializer(new ObjectMapper());
         var pgCachePropertes = new PgCacheProperties();
         pgCachePropertes.setCleanupEnabled(false);
         pgCachePropertes.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
-        var executorHolder = new PgExecutorHolder(pgCachePropertes.getAsync(), (s) -> (s));
+        var executorHolder = new PgCacheExecutorHolder(pgCachePropertes.getAsync(), (s) -> (s));
         var cacheManager = new PgCacheManager(executorHolder, factory, valueSerializer, cacheResilienceFactory, pgCachePropertes);
 
         var cache = cacheManager.getCache("cache1");
@@ -79,9 +83,10 @@ class SimplePgOperationsIT {
                               .build();
 
         var someValue = new SomeValueClass("f1", 22L);
-
+        assert cache != null;
         cache.put(someKey, someValue);
         var storedValue = cache.get(someKey);
+        assert storedValue != null;
         assertThat(storedValue.get()).isEqualTo(someValue);
 
         cache.evict(someKey);
@@ -95,6 +100,7 @@ class SimplePgOperationsIT {
 
         cache.put(someKey, null);
         storedValue = cache.get(someKey);
+        assert storedValue != null;
         assertThat(storedValue.get()).isNull();
     }
 

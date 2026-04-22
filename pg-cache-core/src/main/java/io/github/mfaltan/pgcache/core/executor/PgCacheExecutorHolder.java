@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.executor;
 
 import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties.AsyncProperties;
@@ -13,7 +13,7 @@ import java.util.concurrent.Executor;
 
 @Slf4j
 @RequiredArgsConstructor
-public class PgExecutorHolder implements ExecutorHolder {
+public class PgCacheExecutorHolder implements CacheExecutorHolder {
 
     private final AsyncProperties asyncProperties;
     private final TaskDecorator taskDecorator;

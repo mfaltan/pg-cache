@@ -1,6 +1,7 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.store;
 
 import io.github.mfaltan.pgcache.common.StoreProperties;
+import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,13 +18,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PgStoreFactoryTest {
+class PgCacheStoreFactoryTest {
 
     private static final String TABLE_NAME = "cache_data";
     private static final String CACHE_NAME = "cache1";
     private static final int DEFAULT_TTL = 30;
 
-    private PgStoreFactory factory;
+    private PgCacheStoreFactory factory;
 
     @Mock
     DataSource adminDataSource, userReadDataStore, userWriteDataStore;
@@ -42,7 +43,7 @@ class PgStoreFactoryTest {
 
     @BeforeEach
     void init() {
-        factory = new PgStoreFactory(adminDataSource, userReadDataStore, userWriteDataStore, TABLE_NAME, timeProvider, DEFAULT_TTL);
+        factory = new PgCacheStoreFactory(adminDataSource, userReadDataStore, userWriteDataStore, TABLE_NAME, timeProvider, DEFAULT_TTL);
     }
 
     @Test
@@ -117,15 +118,15 @@ class PgStoreFactoryTest {
         verifyNoMoreInteractions(connection, statement);
     }
 
-    private PgStore createStore(int expectedTtl) {
-        return PgStore.builder()
-                      .readDataSource(userReadDataStore)
-                      .writeDataSource(userWriteDataStore)
-                      .adminDataSource(adminDataSource)
-                      .timeProvider(timeProvider)
-                      .cacheName(CACHE_NAME)
-                      .tableName(TABLE_NAME + "_" + CACHE_NAME)
-                      .ttlSeconds(expectedTtl)
-                      .build();
+    private PgCacheStore createStore(int expectedTtl) {
+        return PgCacheStore.builder()
+                           .readDataSource(userReadDataStore)
+                           .writeDataSource(userWriteDataStore)
+                           .adminDataSource(adminDataSource)
+                           .timeProvider(timeProvider)
+                           .cacheName(CACHE_NAME)
+                           .tableName(TABLE_NAME + "_" + CACHE_NAME)
+                           .ttlSeconds(expectedTtl)
+                           .build();
     }
 }

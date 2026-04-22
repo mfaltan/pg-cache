@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.executor;
 
 import jakarta.annotation.Nonnull;
 import org.slf4j.MDC;

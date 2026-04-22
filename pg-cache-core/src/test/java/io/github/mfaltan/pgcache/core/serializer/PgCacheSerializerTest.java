@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core;
+package io.github.mfaltan.pgcache.core.serializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
@@ -21,14 +21,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class JacksonSerializerTest {
+class PgCacheSerializerTest {
 
     private static final String VALUE = "test-value";
     private static final byte[] BYTES = new byte[]{1, 2, 3};
     private static final Class<String> CLAZZ = String.class;
 
     @InjectMocks
-    private JacksonSerializer serializer;
+    private PgCacheSerializer serializer;
 
     @Mock
     private ObjectMapper mapper;
