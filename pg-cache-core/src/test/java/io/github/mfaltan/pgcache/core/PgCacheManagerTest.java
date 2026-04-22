@@ -36,6 +36,9 @@ class PgCacheManagerTest {
     private PgCacheManager cacheManager;
 
     @Mock
+    private ExecutorHolder executorHolder;
+
+    @Mock
     private StoreFactory storeFactory;
 
     @Mock
@@ -61,6 +64,7 @@ class PgCacheManagerTest {
     @BeforeEach
     void init() {
         cacheManager = PgCacheManager.builder()
+                                     .executorHolder(executorHolder)
                                      .storeFactory(storeFactory)
                                      .properties(pgCacheProperties)
                                      .cacheResilienceFactory(cacheResilienceFactory)
@@ -188,6 +192,7 @@ class PgCacheManagerTest {
                       .serializer(serializer)
                       .store(store)
                       .cacheResilience(cacheResilience)
+                      .executorHolder(executorHolder)
                       .build();
     }
 

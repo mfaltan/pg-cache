@@ -2,9 +2,11 @@ package io.github.mfaltan.pgcache.core.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.core.CurrentDateTimeProvider;
+import io.github.mfaltan.pgcache.core.ExecutorHolder;
 import io.github.mfaltan.pgcache.core.JacksonSerializer;
 import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
 import io.github.mfaltan.pgcache.core.PgCacheManager;
+import io.github.mfaltan.pgcache.core.PgExecutorHolder;
 import io.github.mfaltan.pgcache.core.PgStoreFactory;
 import io.github.mfaltan.pgcache.core.StoreFactory;
 import io.github.mfaltan.pgcache.core.ValueSerializer;
@@ -42,12 +44,12 @@ public class CacheConfig extends AbstractCachingConfiguration {
 
     @Bean
     DataSource pgCacheUserWriteDataSource(PgCacheConfigurationProperties properties) {
-        return HikariDataSourceFactory.create(properties.getAdminDatasource());
+        return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
     }
 
     @Bean
     DataSource pgCacheAdminDataSource(PgCacheConfigurationProperties properties) {
-        return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
+        return HikariDataSourceFactory.create(properties.getAdminDatasource());
     }
 
     @Bean
@@ -74,12 +76,14 @@ public class CacheConfig extends AbstractCachingConfiguration {
     }
 
     @Bean("pgCacheManager")
-    CacheManager cacheManager(StoreFactory storeFactory,
+    CacheManager cacheManager(ExecutorHolder executorHolder,
+                              StoreFactory storeFactory,
                               ValueSerializer valueSerializer,
                               CacheResilienceFactory cacheResilienceFactory,
                               PgCacheConfigurationProperties properties) {
 
         return PgCacheManager.builder()
+                             .executorHolder(executorHolder)
                              .storeFactory(storeFactory)
                              .serializer(valueSerializer)
                              .cacheResilienceFactory(cacheResilienceFactory)
@@ -100,5 +104,10 @@ public class CacheConfig extends AbstractCachingConfiguration {
     @Bean
     CacheResilienceFactory cacheResilienceFactory() {
         return new NoOpCacheResilienceFactory();
+    }
+
+    @Bean
+    ExecutorHolder executorHolder(PgCacheConfigurationProperties properties) {
+        return new PgExecutorHolder(properties.getAsync());
     }
 }

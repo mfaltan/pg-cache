@@ -18,6 +18,7 @@ public class PgCache implements EvictableCache, TypedCache {
     private final ValueSerializer serializer;
     private final Store store;
     private final CacheResilience cacheResilience;
+    private final ExecutorHolder executorHolder;
 
     @Override
     public String getName() {
@@ -62,27 +63,32 @@ public class PgCache implements EvictableCache, TypedCache {
     @Override
     public void put(Object key, Object value) {
         var keyEntry = keyToKeyEntry(key);
-        cacheResilience.execute(() -> putInternal(keyEntry, value), () -> {
-        });
+        var executor = executorHolder.getWriteExecutor();
+        executor.execute(() -> cacheResilience.execute(() -> putInternal(keyEntry, value), () -> {
+        }));
+
     }
 
     @Override
     public void evict(Object key) {
         var keyEntry = keyToKeyEntry(key);
-        cacheResilience.execute(() -> evictInternal(keyEntry), () -> {
-        });
+        var executor = executorHolder.getWriteExecutor();
+        executor.execute(() -> cacheResilience.execute(() -> evictInternal(keyEntry), () -> {
+        }));
     }
 
     @Override
     public void clear() {
-        cacheResilience.execute(store::clear, () -> {
-        });
+        var executor = executorHolder.getClearExecutor();
+        executor.execute(() -> cacheResilience.execute(store::clear, () -> {
+        }));
     }
 
     @Override
     public void evictExpired(int limit) {
-        cacheResilience.execute(() -> store.evictExpired(limit), () -> {
-        });
+        var executor = executorHolder.getWriteExecutor();
+        executor.execute(() -> cacheResilience.execute(() -> store.evictExpired(limit), () -> {
+        }));
     }
 
     private ValueWrapper getInternal(KeyEntry keyEntry) {

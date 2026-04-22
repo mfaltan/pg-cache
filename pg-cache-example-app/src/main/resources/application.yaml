@@ -9,6 +9,11 @@ pg-cache:
     cache1:
       ttl-seconds: 5
 
+  async:
+    enabled: true
+    writeThreads: 3
+    clearThreads: 2
+
   admin-datasource:
     url: jdbc:postgresql://localhost:5432/pgcache
     username: pgcache-admin
