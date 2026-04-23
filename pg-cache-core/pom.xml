@@ -98,22 +98,12 @@
 
     <build>
         <plugins>
-
-            <!-- Java compiler -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin.version}</version>
-                <configuration>
-                    <release>${java.version}</release>
-                </configuration>
             </plugin>
 
-            <!-- Test runner -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin.version}</version>
             </plugin>
         </plugins>
     </build>
