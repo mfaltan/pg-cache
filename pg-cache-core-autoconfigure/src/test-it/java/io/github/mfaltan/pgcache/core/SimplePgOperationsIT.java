@@ -16,6 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -72,7 +73,7 @@ class SimplePgOperationsIT {
         pgCachePropertes.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
         var executorHolder = new PgCacheExecutorHolder(pgCachePropertes.getAsync(), (s) -> (s));
-        var cacheManager = new PgCacheManager(executorHolder, factory, valueSerializer, cacheResilienceFactory, pgCachePropertes);
+        var cacheManager = new PgCacheManager(executorHolder, factory, cacheResilienceFactory, pgCachePropertes, List.of(valueSerializer));
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {

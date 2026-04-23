@@ -18,6 +18,7 @@ import org.springframework.cache.Cache;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,13 +69,8 @@ class PgCacheManagerTest {
 
     @BeforeEach
     void init() {
-        cacheManager = PgCacheManager.builder()
-                                     .cacheExecutorHolder(cacheExecutorHolder)
-                                     .cacheStoreFactory(cacheStoreFactory)
-                                     .properties(pgCacheProperties)
-                                     .cacheResilienceFactory(cacheResilienceFactory)
-                                     .serializer(serializer)
-                                     .build();
+        when(serializer.getCacheNames()).thenReturn(null);
+        cacheManager = new PgCacheManager(cacheExecutorHolder, cacheStoreFactory, cacheResilienceFactory, pgCacheProperties, List.of(serializer));
     }
 
     @Test

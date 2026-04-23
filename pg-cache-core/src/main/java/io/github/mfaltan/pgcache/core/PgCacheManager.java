@@ -12,8 +12,6 @@ import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
 import jakarta.annotation.Nonnull;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.cache.Cache;
@@ -23,21 +21,42 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
-@RequiredArgsConstructor
-@Builder
+
 public class PgCacheManager implements CacheManager {
 
     private final CacheExecutorHolder cacheExecutorHolder;
     private final CacheStoreFactory cacheStoreFactory;
-    private final CacheValueSerializer serializer;
     private final CacheResilienceFactory cacheResilienceFactory;
     private final PgCacheProperties properties;
 
+    private final Map<String, CacheValueSerializer> serializerMap = new HashMap<>();
     private final Map<String, EvictableCache> caches = new HashMap<>();
+
+    public PgCacheManager(CacheExecutorHolder cacheExecutorHolder,
+                          CacheStoreFactory cacheStoreFactory,
+                          CacheResilienceFactory cacheResilienceFactory,
+                          PgCacheProperties properties,
+                          List<CacheValueSerializer> serializers) {
+        this.cacheExecutorHolder = cacheExecutorHolder;
+        this.cacheStoreFactory = cacheStoreFactory;
+        this.cacheResilienceFactory = cacheResilienceFactory;
+        this.properties = properties;
+
+        serializers.forEach(s -> {
+            var cacheNames = s.getCacheNames();
+            if (cacheNames == null) {
+                log.debug(Constants.MARKER, "Registering [{}] as a default serializer", s.getClass());
+                serializerMap.put(null, s);
+            } else {
+                s.getCacheNames().forEach(name -> registerSerializer(name, s));
+            }
+        });
+    }
 
     @Override
     public Cache getCache(@Nonnull String name) {
@@ -81,6 +100,7 @@ public class PgCacheManager implements CacheManager {
     private PgCache createAndRegisterRealCache(String name, CacheResilience cacheResilience) {
         var storeProp = properties.getCaches().get(name);
         var store = cacheStoreFactory.initializeStore(name, storeProp);
+        var serializer = getSerializer(name);
         var cache = PgCache.builder()
                            .name(name)
                            .cacheExecutorHolder(cacheExecutorHolder)
@@ -92,12 +112,27 @@ public class PgCacheManager implements CacheManager {
         return cache;
     }
 
+    private CacheValueSerializer getSerializer(String name) {
+        return serializerMap.computeIfAbsent(name, (n) -> serializerMap.get(null));
+    }
+
     private PgCache createNoOpCache(String name) {
+        var serializer = getSerializer(name);
         return PgCache.builder()
                       .name(name)
                       .serializer(serializer)
                       .cacheStore(new NoOpCacheStore())
                       .cacheResilience(new NoOpCacheResilience())
                       .build();
+    }
+
+
+    private void registerSerializer(String cacheName, CacheValueSerializer serializer) {
+        if (serializerMap.containsKey(cacheName)) {
+            throw new IllegalStateException("Serializer for cache [" + cacheName + "] already exists ");
+        } else {
+            log.debug(Constants.MARKER, "Registering [{}] as a serializer of cache [{}]", serializer.getClass(), null);
+            serializerMap.put(cacheName, serializer);
+        }
     }
 }
