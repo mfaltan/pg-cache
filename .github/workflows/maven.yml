@@ -27,4 +27,4 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
 
       - name: Build with Maven
-        run: mvn clean verify
+        run: mvn clean verify sonar:sonar
