@@ -29,6 +29,7 @@ jobs:
       - name: Build with Maven
         run: |
           mvn clean verify sonar:sonar \
+            -Pcoverage \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=mfaltan \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
