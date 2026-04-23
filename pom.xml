@@ -44,6 +44,7 @@
         <maven.failsafe.plugin.version>3.5.5</maven.failsafe.plugin.version>
         <builder.helper.maven.plugin.version>3.6.1</builder.helper.maven.plugin.version>
         <maven.boot.plugin.version>3.5.13</maven.boot.plugin.version>
+        <maven.dependency.plugin.version>3.10.0</maven.dependency.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -141,6 +142,19 @@
                 </plugin>
 
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${maven.dependency.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>properties</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${maven.boot.plugin.version}</version>
@@ -176,9 +190,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>${maven.failsafe.plugin.version}</version>
-                    <configuration>
-                        <forkCount>0</forkCount>
-                    </configuration>
                     <executions>
                         <execution>
                             <goals>
