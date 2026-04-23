@@ -8,6 +8,8 @@ pg-cache:
   caches:
     cache1:
       ttl-seconds: 5
+    cache2:
+      disabled: true
 
   async:
     enabled: true
