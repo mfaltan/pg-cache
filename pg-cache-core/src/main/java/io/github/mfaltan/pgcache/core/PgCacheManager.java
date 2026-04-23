@@ -13,6 +13,7 @@ import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilience;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.MDC;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -70,11 +71,20 @@ public class PgCacheManager implements CacheManager {
                     return caches.get(name);
                 }
                 log.debug(Constants.MARKER, "Creating new cache [{}]", name);
-                var cacheResilience = cacheResilienceFactory.create(name);
-                return cacheResilience.execute(() -> createAndRegisterRealCache(name, cacheResilience), () -> createNoOpCache(name));
+                boolean cacheDisabled = isCacheDisabled(name);
+                if (cacheDisabled) {
+                    var pgCache = createNoOpCache(name, false);
+                    caches.put(name, pgCache);
+                    return pgCache;
+                } else {
+                    var cacheResilience = cacheResilienceFactory.create(name);
+                    return cacheResilience.execute(() -> createAndRegisterRealCache(name, cacheResilience), () -> createNoOpCache(name, true));
+                }
             }
         }
     }
+
+
 
     @Override
     @Nonnull
@@ -116,12 +126,13 @@ public class PgCacheManager implements CacheManager {
         return serializerMap.computeIfAbsent(name, (n) -> serializerMap.get(null));
     }
 
-    private PgCache createNoOpCache(String name) {
+    private PgCache createNoOpCache(String name, boolean temporary) {
         var serializer = getSerializer(name);
         return PgCache.builder()
                       .name(name)
+                      .cacheExecutorHolder(cacheExecutorHolder)
                       .serializer(serializer)
-                      .cacheStore(new NoOpCacheStore())
+                      .cacheStore(new NoOpCacheStore(temporary))
                       .cacheResilience(new NoOpCacheResilience())
                       .build();
     }
@@ -134,5 +145,15 @@ public class PgCacheManager implements CacheManager {
             log.debug(Constants.MARKER, "Registering [{}] as a serializer of cache [{}]", serializer.getClass(), null);
             serializerMap.put(cacheName, serializer);
         }
+    }
+
+    private @NonNull Boolean isCacheDisabled(@NonNull String name) {
+        return properties.getCaches()
+                         .entrySet()
+                         .stream()
+                         .filter(entry -> entry.getKey().equals(name))
+                         .map(entry -> entry.getValue().isDisabled())
+                         .findFirst()
+                         .orElse(false);
     }
 }

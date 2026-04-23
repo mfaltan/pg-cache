@@ -53,6 +53,8 @@ public class PgCacheProperties {
     @Getter
     @Setter
     public static class CacheProperties implements StoreProperties {
+
+        private boolean disabled;
         /**
          * TTL in seconds (optional, falls back to default)
          */
