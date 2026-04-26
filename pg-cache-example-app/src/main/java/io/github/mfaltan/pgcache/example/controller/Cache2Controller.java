@@ -27,7 +27,7 @@ public class Cache2Controller {
     @DeleteMapping
     public void evict(@RequestParam("age") int age,
                       @RequestParam("name") String name) {
-        log.info(Constants.MARKER, "Cache2 evict called [{}] with age and name [{}]", age, name);
+        log.info(Constants.MARKER, "Cache2 evict called with age [{}] and name [{}]", age, name);
         var cacheRequest = CacheRequest.builder()
                                        .age(age)
                                        .name(name)

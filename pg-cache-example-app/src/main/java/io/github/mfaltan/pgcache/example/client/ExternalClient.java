@@ -17,7 +17,7 @@ import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 @Slf4j
 public class ExternalClient {
 
-    @Cacheable(value = Constants.CACHE_1, key = "#p0 + '-' + #p1")
+    @Cacheable(cacheManager = "pgCacheManager", value = Constants.CACHE_1, key = "#p0 + '-' + #p1")
     public List<UUID> getData(int age, String name) {
         log.info(MARKER, "Getting new data for age [{}] and name [{}]", age, name);
         int count = ThreadLocalRandom.current().nextInt(1, 11);
@@ -27,9 +27,20 @@ public class ExternalClient {
                         .toList();
     }
 
-    @Cacheable(value = Constants.CACHE_2)
+    @Cacheable(cacheManager = "pgCacheManager", value = Constants.CACHE_2)
     public List<UUID> getData(CacheRequest cacheRequest) {
         log.info(MARKER, "Getting new data for [{}]", cacheRequest);
+
+        int count = ThreadLocalRandom.current().nextInt(1, 11);
+
+        return IntStream.range(0, count)
+                        .mapToObj(i -> UUID.randomUUID())
+                        .toList();
+    }
+
+    @Cacheable(cacheManager = "simpleCacheManager", value = Constants.CACHE_3)
+    public List<UUID> getData(int age, int age2) {
+        log.info(MARKER, "Getting new data for [{}, {}]", age, age2);
 
         int count = ThreadLocalRandom.current().nextInt(1, 11);
 

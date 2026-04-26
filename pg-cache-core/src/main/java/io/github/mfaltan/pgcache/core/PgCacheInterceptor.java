@@ -39,8 +39,11 @@ public class PgCacheInterceptor extends CacheInterceptor {
 
         @Override
         protected @Nullable Object generateKey(@Nullable Object result) {
-            log.debug(Constants.MARKER, "Generating key in pgCacheInterceptor for [{}]", result);
             var rawKey = super.generateKey(result);
+            if (!typeNeeded) {
+                return rawKey;
+            }
+            log.debug(Constants.MARKER, "Generating key in pgCacheInterceptor for [{}]", result);
             log.debug(Constants.MARKER, "Raw key [{}]", rawKey);
             var ret = transformKey(rawKey);
             log.debug(Constants.MARKER, "Transformed generated key to [{}]", ret);
@@ -50,6 +53,9 @@ public class PgCacheInterceptor extends CacheInterceptor {
         @Override
         protected @Nullable Object getGeneratedKey() {
             var rawKey = super.getGeneratedKey();
+            if (!typeNeeded) {
+                return rawKey;
+            }
             log.debug(Constants.MARKER, "Got generated key [{}]", rawKey);
             var ret = transformKey(rawKey);
             log.debug(Constants.MARKER, "Transformed received key to [{}]", ret);

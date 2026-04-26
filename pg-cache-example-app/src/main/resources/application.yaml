@@ -1,5 +1,6 @@
 pg-cache:
   enabled: true
+  use-universal-serializer: true
   table-name: cache_data
   default-ttl-seconds: 30
   cleanup-enabled: true

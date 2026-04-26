@@ -24,7 +24,7 @@ public class CacheService {
         return client.getData(age, name);
     }
 
-    @CacheEvict(value = Constants.CACHE_1, key = "#p0 + '-' + #p1")
+    @CacheEvict(cacheManager = "pgCacheManager", value = Constants.CACHE_1, key = "#p0 + '-' + #p1")
     public void evictCache(int age, String name) {
         log.info(MARKER, "Age [{}] and name [{}] removed from cache1", age, name);
     }
@@ -33,9 +33,18 @@ public class CacheService {
         return client.getData(cacheRequest);
     }
 
-    @CacheEvict(value = Constants.CACHE_2)
+    @CacheEvict(cacheManager = "pgCacheManager", value = Constants.CACHE_2)
     public void evictCache(CacheRequest cacheRequest) {
         log.info(MARKER, "[{}] removed from cache2", cacheRequest);
 
+    }
+
+    public List<UUID> getCache(int age, int age2) {
+        return client.getData(age, age2);
+    }
+
+    @CacheEvict(cacheManager = "simpleCacheManager", value = Constants.CACHE_3)
+    public void evictCache(int age1, int age2) {
+        log.info(MARKER, "[{}, {}] removed from cache3", age1, age2);
     }
 }
