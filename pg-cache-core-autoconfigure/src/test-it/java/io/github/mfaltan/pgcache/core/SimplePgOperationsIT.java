@@ -3,6 +3,7 @@ package io.github.mfaltan.pgcache.core;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
+import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryDefault;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
@@ -73,7 +74,9 @@ class SimplePgOperationsIT {
         pgCachePropertes.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
         var executorHolder = new PgCacheExecutorHolder(pgCachePropertes.getAsync(), (s) -> (s));
-        var cacheManager = new PgCacheManager(executorHolder, factory, cacheResilienceFactory, pgCachePropertes, List.of(valueSerializer));
+        var cacheFactory = new PgCacheFactoryDefault(factory, executorHolder, List.of(valueSerializer), pgCachePropertes);
+        cacheFactory.init();
+        var cacheManager = new PgCacheManager(cacheFactory, cacheResilienceFactory, pgCachePropertes);
 
         var cache = cacheManager.getCache("cache1");
         var type = new TypeReference<SomeValueClass>() {

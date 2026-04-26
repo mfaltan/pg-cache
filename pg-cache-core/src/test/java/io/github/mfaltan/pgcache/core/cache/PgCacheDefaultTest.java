@@ -33,7 +33,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PgCacheTest {
+class PgCacheDefaultTest {
 
     private static final Long SOME_LONG_KEY = 1L;
     private static final String CACHE_NAME = "test-cache";
@@ -42,7 +42,7 @@ class PgCacheTest {
     private static final byte[] KEY_BYTES = "key1-normalized".getBytes();
     private static final byte[] VALUE_BYTES = "value1-serialized".getBytes();
 
-    private PgCache cache;
+    private PgCacheDefault cache;
 
     @Mock
     private CacheExecutorHolder cacheExecutorHolder;
@@ -76,13 +76,7 @@ class PgCacheTest {
 
     @BeforeEach
     void setUp() {
-        cache = PgCache.builder()
-                       .name(CACHE_NAME)
-                       .cacheExecutorHolder(cacheExecutorHolder)
-                       .serializer(serializer)
-                       .cacheStore(cacheStore)
-                       .cacheResilience(cacheResilience)
-                       .build();
+        cache = new PgCacheDefault(CACHE_NAME, cacheStore, cacheExecutorHolder, cacheResilience, serializer);
     }
 
     @Test

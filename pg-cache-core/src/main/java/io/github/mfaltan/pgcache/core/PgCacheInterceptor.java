@@ -1,7 +1,7 @@
 package io.github.mfaltan.pgcache.core;
 
 import io.github.mfaltan.pgcache.common.Constants;
-import io.github.mfaltan.pgcache.core.cache.TypedCache;
+import io.github.mfaltan.pgcache.core.cache.PgCache;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class PgCacheInterceptor extends CacheInterceptor {
             super(metadata, args, target);
             typeNeeded = this.getCaches()
                              .stream()
-                             .anyMatch(cache -> cache instanceof TypedCache);
+                             .anyMatch(cache -> cache instanceof PgCache);
         }
 
         @Override

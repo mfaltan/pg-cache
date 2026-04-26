@@ -1,6 +1,8 @@
 package io.github.mfaltan.pgcache.core.config;
 
 import io.github.mfaltan.pgcache.common.Constants;
+import io.github.mfaltan.pgcache.core.cache.PgCacheFactory;
+import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryDefault;
 import io.github.mfaltan.pgcache.core.PgCacheManager;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
@@ -71,17 +73,24 @@ public class CacheConfig {
                                   .build();
     }
 
+    @Bean
+    @ConditionalOnMissingBean(name = "pgCacheFactory")
+    PgCacheFactory pgCacheFactory(CacheExecutorHolder cacheExecutorHolder,
+                                  CacheStoreFactory cacheStoreFactory,
+                                  List<CacheValueSerializer> serializers,
+                                  PgCacheConfigurationProperties properties) {
+        return new PgCacheFactoryDefault(cacheStoreFactory, cacheExecutorHolder, serializers, properties);
+    }
+
     @Bean("pgCacheManager")
     @ConditionalOnMissingBean(name = "pgCacheManager")
-    CacheManager pgCacheManager(CacheExecutorHolder cacheExecutorHolder,
-                              CacheStoreFactory cacheStoreFactory,
-                              CacheResilienceFactory cacheResilienceFactory,
-                              List<CacheValueSerializer> serializers,
-                              PgCacheConfigurationProperties properties) {
+    CacheManager pgCacheManager(PgCacheFactory pgCacheFactory,
+                                CacheResilienceFactory cacheResilienceFactory,
+                                PgCacheConfigurationProperties properties) {
 
         log.info(Constants.MARKER, "Initializing pg cache manager");
 
-        return new PgCacheManager(cacheExecutorHolder, cacheStoreFactory, cacheResilienceFactory, properties, serializers);
+        return new PgCacheManager(pgCacheFactory, cacheResilienceFactory, properties);
     }
 
     @Bean
