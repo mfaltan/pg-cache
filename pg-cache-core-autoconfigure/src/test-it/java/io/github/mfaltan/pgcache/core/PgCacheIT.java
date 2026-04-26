@@ -26,7 +26,7 @@ public class PgCacheIT {
     static void properties(DynamicPropertyRegistry registry) {
 
         registry.add("pg-cache.enabled", () -> true);
-
+        registry.add("pg-cache.use-universal-serializer", () -> true);
         registry.add("pg-cache.admin-datasource.url", postgres::getJdbcUrl);
         registry.add("pg-cache.admin-datasource.username", postgres::getUsername);
         registry.add("pg-cache.admin-datasource.password", postgres::getPassword);

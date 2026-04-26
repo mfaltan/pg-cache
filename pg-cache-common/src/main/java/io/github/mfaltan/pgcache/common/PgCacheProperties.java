@@ -16,6 +16,12 @@ public class PgCacheProperties {
     private boolean enabled = false;
 
     /**
+     * PgCache can override default cacheInterceptor - so no specific serializers are needed.
+     * When keep this as false, it is not enabled - and custom serializer implementation is needed
+     */
+    private boolean useUniversalSerializer = false;
+
+    /**
      * Table name for cache
      */
     private String tableName = "cache_data";
