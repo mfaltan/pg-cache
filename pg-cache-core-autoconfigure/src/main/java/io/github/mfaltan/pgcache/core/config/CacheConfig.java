@@ -68,7 +68,6 @@ public class CacheConfig {
                                   .userReadDataSource(userReadDataSource)
                                   .userWriteDataSource(userWriteDataSource)
                                   .tableName(properties.getTableName())
-                                  .defaultTtlSeconds(properties.getDefaultTtlSeconds())
                                   .timeProvider(currentDateTimeProvider)
                                   .build();
     }

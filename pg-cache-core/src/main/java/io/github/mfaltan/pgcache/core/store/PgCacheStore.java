@@ -32,10 +32,8 @@ public class PgCacheStore implements CacheStore {
     private final String tableName;
     private final String cacheName;
 
-    private final int ttlSeconds;
-
     @Override
-    public void put(Long key, CacheEntry entry) {
+    public void put(Long key, CacheEntry entry, int ttlSeconds) {
         log.debug(Constants.MARKER, "Put value for key [{}] to cache [{}]", key, cacheName);
 
         String sql = """

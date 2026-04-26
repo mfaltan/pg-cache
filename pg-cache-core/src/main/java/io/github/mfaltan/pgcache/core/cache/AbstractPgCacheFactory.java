@@ -55,10 +55,9 @@ public abstract class AbstractPgCacheFactory {
             return new PgCacheNoOp(name, PERMANENTLY);
         } else {
             log.debug(Constants.MARKER, "Creating new cache [{}]", name);
-            var storeProp = properties.getCaches().get(name);
-            var store = cacheStoreFactory.initializeStore(name, storeProp);
+            var store = cacheStoreFactory.initializeStore(name);
             var serializer = getSerializer(name);
-            return createCache(name, store, cacheExecutorHolder, cacheResilience, serializer);
+            return createCache(name, store, cacheExecutorHolder, cacheResilience, serializer, properties);
         }
     }
 
@@ -66,7 +65,8 @@ public abstract class AbstractPgCacheFactory {
                                            CacheStore store,
                                            CacheExecutorHolder cacheExecutorHolder,
                                            CacheResilience cacheResilience,
-                                           CacheValueSerializer serializer);
+                                           CacheValueSerializer serializer,
+                                           PgCacheProperties properties);
 
     protected @NonNull Boolean isCacheDisabled(@NonNull String name) {
         return properties.getCaches()

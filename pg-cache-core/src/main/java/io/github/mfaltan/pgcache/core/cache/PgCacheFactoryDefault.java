@@ -23,7 +23,8 @@ public class PgCacheFactoryDefault extends AbstractPgCacheFactory implements PgC
                                   CacheStore store,
                                   CacheExecutorHolder executorHolder,
                                   CacheResilience resilience,
-                                  CacheValueSerializer serializer) {
-        return new PgCacheDefault(name, store, executorHolder, resilience, serializer);
+                                  CacheValueSerializer serializer,
+                                  PgCacheProperties properties) {
+        return new PgCacheDefault(name, store, executorHolder, resilience, serializer, properties);
     }
 }

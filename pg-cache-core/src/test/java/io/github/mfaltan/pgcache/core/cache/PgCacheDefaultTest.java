@@ -3,6 +3,7 @@ package io.github.mfaltan.pgcache.core.cache;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
@@ -23,6 +24,7 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doAnswer;
@@ -74,9 +76,13 @@ class PgCacheDefaultTest {
     @Mock
     private CacheResilience cacheResilience;
 
+    @Mock
+    private PgCacheProperties properties;
+
     @BeforeEach
     void setUp() {
-        cache = new PgCacheDefault(CACHE_NAME, cacheStore, cacheExecutorHolder, cacheResilience, serializer);
+        when(properties.getDefaultTtlSeconds()).thenReturn(1);
+        cache = new PgCacheDefault(CACHE_NAME, cacheStore, cacheExecutorHolder, cacheResilience, serializer, properties);
     }
 
     @Test
@@ -249,7 +255,7 @@ class PgCacheDefaultTest {
             // THEN
             assertThat(first).isEqualTo(SOME_VALUE);
             verify(loader).call();
-            verify(cacheStore).put(SOME_LONG_KEY, entry);
+            verify(cacheStore).put(SOME_LONG_KEY, entry, 1);
         }
     }
 
@@ -276,7 +282,7 @@ class PgCacheDefaultTest {
             // THEN
             assertThat(actual).isEqualTo(SOME_VALUE);
             verifyNoInteractions(loader);
-            verify(cacheStore, times(0)).put(anyLong(), any(CacheEntry.class));
+            verify(cacheStore, times(0)).put(anyLong(), any(CacheEntry.class), eq(1));
         }
     }
 
