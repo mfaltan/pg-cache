@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @SpringBootTest(classes = TestBootstrap.class)
-public class PgCacheDefaultIT {
+public class PgCacheImplIT {
 
     @Container
     static PostgreSQLContainer<?> postgres =

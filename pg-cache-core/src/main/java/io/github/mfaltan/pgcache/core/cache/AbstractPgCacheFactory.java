@@ -4,8 +4,7 @@ import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
-import io.github.mfaltan.pgcache.core.store.CacheStore;
-import io.github.mfaltan.pgcache.core.store.CacheStoreFactory;
+import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +21,8 @@ import static io.github.mfaltan.pgcache.core.cache.PgCacheNoOp.Type.PERMANENTLY;
 @Slf4j
 public abstract class AbstractPgCacheFactory {
 
-    protected final CacheStoreFactory cacheStoreFactory;
-    protected final CacheExecutorHolder cacheExecutorHolder;
+    protected final PgCacheStore store;
+    protected final CacheExecutorHolder executorHolder;
     protected final List<CacheValueSerializer> serializers;
     protected final PgCacheProperties properties;
 
@@ -55,14 +54,14 @@ public abstract class AbstractPgCacheFactory {
             return new PgCacheNoOp(name, PERMANENTLY);
         } else {
             log.debug(Constants.MARKER, "Creating new cache [{}]", name);
-            var store = cacheStoreFactory.initializeStore(name);
+            store.initCache(name);
             var serializer = getSerializer(name);
-            return createCache(name, store, cacheExecutorHolder, cacheResilience, serializer, properties);
+            return createCache(name, store, executorHolder, cacheResilience, serializer, properties);
         }
     }
 
     protected abstract PgCache createCache(String name,
-                                           CacheStore store,
+                                           PgCacheStore store,
                                            CacheExecutorHolder cacheExecutorHolder,
                                            CacheResilience cacheResilience,
                                            CacheValueSerializer serializer,

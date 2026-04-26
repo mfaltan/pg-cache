@@ -1,15 +1,15 @@
 package io.github.mfaltan.pgcache.core.config;
 
 import io.github.mfaltan.pgcache.common.Constants;
-import io.github.mfaltan.pgcache.core.cache.PgCacheFactory;
-import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryDefault;
 import io.github.mfaltan.pgcache.core.PgCacheManager;
+import io.github.mfaltan.pgcache.core.cache.PgCacheFactory;
+import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryImpl;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheTaskDecorator;
 import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
-import io.github.mfaltan.pgcache.core.store.CacheStoreFactory;
-import io.github.mfaltan.pgcache.core.store.PgCacheStoreFactory;
+import io.github.mfaltan.pgcache.core.store.PgCacheStore;
+import io.github.mfaltan.pgcache.core.store.PgCacheStoreImpl;
 import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import io.github.mfaltan.pgcache.resilience.CacheResilienceFactory;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
@@ -56,29 +56,24 @@ public class CacheConfig {
     }
 
     @Bean
-    CacheStoreFactory storeFactory(PgCacheConfigurationProperties properties,
-                                   @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
-                                   @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
-                                   @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
-                                   CurrentDateTimeProvider currentDateTimeProvider) {
+    @ConditionalOnMissingBean
+    PgCacheStore pgCacheStore(PgCacheConfigurationProperties properties,
+                              @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
+                              @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
+                              @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
+                              CurrentDateTimeProvider currentDateTimeProvider) {
 
-        log.info(Constants.MARKER, "Initializing pg cache store factory");
-        return PgCacheStoreFactory.builder()
-                                  .adminDataSource(adminDataSource)
-                                  .userReadDataSource(userReadDataSource)
-                                  .userWriteDataSource(userWriteDataSource)
-                                  .tableName(properties.getTableName())
-                                  .timeProvider(currentDateTimeProvider)
-                                  .build();
+        log.info(Constants.MARKER, "Initializing pg cache store");
+        return new PgCacheStoreImpl(userReadDataSource, userWriteDataSource, adminDataSource, currentDateTimeProvider, properties.getTableName());
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "pgCacheFactory")
+    @ConditionalOnMissingBean
     PgCacheFactory pgCacheFactory(CacheExecutorHolder cacheExecutorHolder,
-                                  CacheStoreFactory cacheStoreFactory,
+                                  PgCacheStore pgCacheStore,
                                   List<CacheValueSerializer> serializers,
                                   PgCacheConfigurationProperties properties) {
-        return new PgCacheFactoryDefault(cacheStoreFactory, cacheExecutorHolder, serializers, properties);
+        return new PgCacheFactoryImpl(pgCacheStore, cacheExecutorHolder, serializers, properties);
     }
 
     @Bean("pgCacheManager")
