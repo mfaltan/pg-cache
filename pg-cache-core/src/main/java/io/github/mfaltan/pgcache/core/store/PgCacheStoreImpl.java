@@ -4,7 +4,6 @@ package io.github.mfaltan.pgcache.core.store;
 import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
-import io.github.mfaltan.pgcache.core.exception.PgCacheStoreFactoryException;
 import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
@@ -226,7 +225,7 @@ public class PgCacheStoreImpl implements PgCacheStore {
 
             stmt.execute(partitionSql);
         } catch (SQLException e) {
-            throw new PgCacheStoreFactoryException("Error when creating partition", e);
+            throw new PgCacheStoreException("Error when creating partition", e);
         }
     }
 
