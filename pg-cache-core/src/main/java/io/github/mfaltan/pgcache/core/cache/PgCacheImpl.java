@@ -8,7 +8,7 @@ import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
-import io.github.mfaltan.pgcache.core.store.CacheStore;
+import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -17,21 +17,21 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 
 @Slf4j
-public class PgCacheDefault implements PgCache {
+public class PgCacheImpl implements PgCache {
     private final String name;
-    private final CacheStore store;
+    private final PgCacheStore store;
     private final CacheExecutorHolder executorHolder;
     private final CacheResilience resilience;
     private final CacheValueSerializer serializer;
     private final PgCacheNoOp cacheNoOp;
     private final int ttlSeconds;
 
-    public PgCacheDefault(String name,
-                          CacheStore store,
-                          CacheExecutorHolder executorHolder,
-                          CacheResilience resilience,
-                          CacheValueSerializer serializer,
-                          PgCacheProperties properties) {
+    public PgCacheImpl(String name,
+                       PgCacheStore store,
+                       CacheExecutorHolder executorHolder,
+                       CacheResilience resilience,
+                       CacheValueSerializer serializer,
+                       PgCacheProperties properties) {
         this.name = name;
         this.store = store;
         this.executorHolder = executorHolder;
@@ -107,15 +107,14 @@ public class PgCacheDefault implements PgCache {
     public void clear() {
         var executor = executorHolder.getClearExecutor();
         log.debug(Constants.MARKER, "About to clear cache [{}]", name);
-        executor.execute(() -> resilience.execute(store::clear, () -> {
-        }));
+        executor.execute(() -> resilience.execute(() -> store.clear(name), cacheNoOp::clear));
     }
 
     @Override
     public void evictExpired(int limit) {
         var executor = executorHolder.getWriteExecutor();
         log.debug(Constants.MARKER, "About to evict expired from cache [{}]", name);
-        executor.execute(() -> resilience.execute(() -> store.evictExpired(limit), () -> cacheNoOp.evict(limit)));
+        executor.execute(() -> resilience.execute(() -> store.evictExpired(limit, name), () -> cacheNoOp.evict(limit)));
     }
 
     private ValueWrapper getInternal(KeyEntry keyEntry) {
@@ -146,13 +145,13 @@ public class PgCacheDefault implements PgCache {
                               .value(serializedValue)
                               .build();
 
-        store.put(longKey, entry, ttlSeconds);
+        store.put(longKey, entry, ttlSeconds, name);
     }
 
     private void evictInternal(KeyEntry keyEntry) {
         byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
-        store.remove(longKey);
+        store.remove(longKey, name);
     }
 
     private Long generateKey(byte[] normalizedKey) {
@@ -177,7 +176,7 @@ public class PgCacheDefault implements PgCache {
         byte[] normalizedKey = normalizeKey(key);
         Long longKey = generateKey(normalizedKey);
 
-        CacheEntry data = store.get(longKey);
+        CacheEntry data = store.get(longKey, name);
         if (data == null || !Arrays.equals(data.normalizedKey(), normalizedKey)) return null;
         return data;
     }

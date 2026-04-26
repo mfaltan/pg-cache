@@ -3,11 +3,11 @@ package io.github.mfaltan.pgcache.core;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
-import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryDefault;
+import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryImpl;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
-import io.github.mfaltan.pgcache.core.store.PgCacheStoreFactory;
+import io.github.mfaltan.pgcache.core.store.PgCacheStoreImpl;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,16 +45,8 @@ class SimplePgOperationsIT {
     @Test
     void should_create_table_and_index() throws Exception {
 
-        var factory = PgCacheStoreFactory.builder()
-                                         .adminDataSource(dataSource)
-                                         .userReadDataSource(dataSource)
-                                         .userWriteDataSource(dataSource)
-                                         .tableName("cache_data")
-                                         .timeProvider(LocalDateTime::now)
-                                         .build();
-
-        factory.init();
-
+        var store = new PgCacheStoreImpl(dataSource, dataSource, dataSource, LocalDateTime::now, "cache_data");
+        store.init();
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement()) {
 
@@ -73,7 +65,7 @@ class SimplePgOperationsIT {
         pgCachePropertes.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
         var executorHolder = new PgCacheExecutorHolder(pgCachePropertes.getAsync(), (s) -> (s));
-        var cacheFactory = new PgCacheFactoryDefault(factory, executorHolder, List.of(valueSerializer), pgCachePropertes);
+        var cacheFactory = new PgCacheFactoryImpl(store, executorHolder, List.of(valueSerializer), pgCachePropertes);
         cacheFactory.init();
         var cacheManager = new PgCacheManager(cacheFactory, cacheResilienceFactory, pgCachePropertes);
 
