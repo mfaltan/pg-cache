@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 
@@ -17,7 +16,6 @@ public class CacheResilienceConfig {
 
 
     @Bean
-    @Primary
     CacheResilienceFactory pgCacheResilienceFactory(CircuitBreakerRegistry circuitBreakerRegistry,
                                                     @Value("${pg-cache.resilience.prefix:pg-cache}") String prefix) {
         log.info(MARKER, "Pg-cache resilience enabled, overriding noOp resilience");

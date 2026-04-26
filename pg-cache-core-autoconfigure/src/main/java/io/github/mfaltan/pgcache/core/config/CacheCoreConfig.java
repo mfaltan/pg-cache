@@ -8,6 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableCaching
 @EnableScheduling
-@Import({CacheConfig.class, CacheSerializerConfig.class})
+@Import({CacheConfig.class, CacheSerializerConfig.class, CacheDataSourceConfig.class})
 public class CacheCoreConfig {
 }

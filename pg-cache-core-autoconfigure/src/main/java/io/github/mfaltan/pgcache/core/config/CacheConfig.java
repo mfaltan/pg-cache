@@ -32,28 +32,13 @@ import java.util.List;
 public class CacheConfig {
 
     @Bean
+    @ConditionalOnMissingBean
     CurrentDateTimeProvider currentDateTimeProvider() {
         log.info(Constants.MARKER, "Initializing pg cache default time provider");
         return LocalDateTime::now;
     }
 
-    @Bean
-    DataSource pgCacheUserReadDataSource(PgCacheConfigurationProperties properties) {
-        log.info(Constants.MARKER, "Initializing pg cache user read data source");
-        return HikariDataSourceFactory.create(properties.getUserReadDataSource());
-    }
 
-    @Bean
-    DataSource pgCacheUserWriteDataSource(PgCacheConfigurationProperties properties) {
-        log.info(Constants.MARKER, "Initializing pg cache user write data source");
-        return HikariDataSourceFactory.create(properties.getUserWriteDataSource());
-    }
-
-    @Bean
-    DataSource pgCacheAdminDataSource(PgCacheConfigurationProperties properties) {
-        log.info(Constants.MARKER, "Initializing pg cache admin data source");
-        return HikariDataSourceFactory.create(properties.getAdminDatasource());
-    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -88,18 +73,21 @@ public class CacheConfig {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     CacheResilienceFactory cacheResilienceFactory() {
         log.info(Constants.MARKER, "Initializing pg cache noOp resilience factory");
         return new NoOpCacheResilienceFactory();
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "pgCacheTaskDecorator")
     TaskDecorator pgCacheTaskDecorator() {
         log.info(Constants.MARKER, "Initializing pg cache task decorator");
         return new PgCacheTaskDecorator();
     }
 
     @Bean
+    @ConditionalOnMissingBean
     CacheExecutorHolder executorHolder(PgCacheConfigurationProperties properties,
                                        @Qualifier("pgCacheTaskDecorator") TaskDecorator taskDecorator) {
         log.info(Constants.MARKER, "Initializing pg cache executor holder");
