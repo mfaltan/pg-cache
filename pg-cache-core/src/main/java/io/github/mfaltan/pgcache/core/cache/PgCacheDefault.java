@@ -2,6 +2,7 @@ package io.github.mfaltan.pgcache.core.cache;
 
 import com.google.common.hash.Hashing;
 import io.github.mfaltan.pgcache.common.Constants;
+import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
@@ -23,18 +24,23 @@ public class PgCacheDefault implements PgCache {
     private final CacheResilience resilience;
     private final CacheValueSerializer serializer;
     private final PgCacheNoOp cacheNoOp;
+    private final int ttlSeconds;
 
     public PgCacheDefault(String name,
                           CacheStore store,
                           CacheExecutorHolder executorHolder,
                           CacheResilience resilience,
-                          CacheValueSerializer serializer) {
+                          CacheValueSerializer serializer,
+                          PgCacheProperties properties) {
         this.name = name;
         this.store = store;
         this.executorHolder = executorHolder;
         this.resilience = resilience;
         this.serializer = serializer;
         this.cacheNoOp = new PgCacheNoOp(name, PgCacheNoOp.Type.TEMPORARILY);
+
+        var prop = properties.getCaches().get(name);
+        this.ttlSeconds = prop != null && prop.getTtlSeconds() != null ? prop.getTtlSeconds() : properties.getDefaultTtlSeconds();
     }
 
     @Override
@@ -140,7 +146,7 @@ public class PgCacheDefault implements PgCache {
                               .value(serializedValue)
                               .build();
 
-        store.put(longKey, entry);
+        store.put(longKey, entry, ttlSeconds);
     }
 
     private void evictInternal(KeyEntry keyEntry) {

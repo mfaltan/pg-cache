@@ -1,6 +1,5 @@
 package io.github.mfaltan.pgcache.core.store;
 
-import io.github.mfaltan.pgcache.common.StoreProperties;
 import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,14 +14,17 @@ import java.sql.Statement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PgCacheStoreFactoryTest {
 
     private static final String TABLE_NAME = "cache_data";
     private static final String CACHE_NAME = "cache1";
-    private static final int DEFAULT_TTL = 30;
 
     private PgCacheStoreFactory factory;
 
@@ -38,56 +40,23 @@ class PgCacheStoreFactoryTest {
     @Mock
     Statement statement;
 
-    @Mock
-    StoreProperties storeProperties;
-
     @BeforeEach
     void init() {
-        factory = new PgCacheStoreFactory(adminDataSource, userReadDataStore, userWriteDataStore, TABLE_NAME, timeProvider, DEFAULT_TTL);
+        factory = new PgCacheStoreFactory(adminDataSource, userReadDataStore, userWriteDataStore, TABLE_NAME, timeProvider);
     }
 
     @Test
-    void should_return_expected_store_with_default_ttl() throws SQLException {
+    void should_return_expected_store() throws SQLException {
         // GIVEN
-        var expected = createStore(DEFAULT_TTL);
+        var expected = createStore();
         when(adminDataSource.getConnection()).thenReturn(connection);
         when(connection.createStatement()).thenReturn(statement);
-        when(storeProperties.getTtlSeconds()).thenReturn(null);
         // WHEN
-        var actual = factory.initializeStore(CACHE_NAME, storeProperties);
+        var actual = factory.initializeStore(CACHE_NAME);
 
         // THEN
         assertThat(actual).isEqualTo(expected);
         verify(statement, times(1)).execute(contains("CREATE UNLOGGED TABLE IF NOT EXISTS cache_data_cache1"));
-    }
-
-    @Test
-    void should_return_expected_store_with_default_ttl_again() throws SQLException {
-        // GIVEN
-        var expected = createStore(DEFAULT_TTL);
-        when(adminDataSource.getConnection()).thenReturn(connection);
-        when(connection.createStatement()).thenReturn(statement);
-
-        // WHEN
-        var actual = factory.initializeStore(CACHE_NAME, null);
-
-        // THEN
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void should_return_expected_store_with_custom_ttl() throws SQLException {
-        // GIVEN
-        var expectedTtl = 55;
-        var expected = createStore(expectedTtl);
-        when(adminDataSource.getConnection()).thenReturn(connection);
-        when(connection.createStatement()).thenReturn(statement);
-        when(storeProperties.getTtlSeconds()).thenReturn(expectedTtl);
-        // WHEN
-        var actual = factory.initializeStore(CACHE_NAME, storeProperties);
-
-        // THEN
-        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -118,7 +87,7 @@ class PgCacheStoreFactoryTest {
         verifyNoMoreInteractions(connection, statement);
     }
 
-    private PgCacheStore createStore(int expectedTtl) {
+    private PgCacheStore createStore() {
         return PgCacheStore.builder()
                            .readDataSource(userReadDataStore)
                            .writeDataSource(userWriteDataStore)
@@ -126,7 +95,6 @@ class PgCacheStoreFactoryTest {
                            .timeProvider(timeProvider)
                            .cacheName(CACHE_NAME)
                            .tableName(TABLE_NAME + "_" + CACHE_NAME)
-                           .ttlSeconds(expectedTtl)
                            .build();
     }
 }

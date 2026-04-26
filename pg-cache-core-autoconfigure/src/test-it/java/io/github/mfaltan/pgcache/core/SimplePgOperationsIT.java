@@ -51,7 +51,6 @@ class SimplePgOperationsIT {
                                          .userWriteDataSource(dataSource)
                                          .tableName("cache_data")
                                          .timeProvider(LocalDateTime::now)
-                                         .defaultTtlSeconds(20)
                                          .build();
 
         factory.init();

@@ -1,8 +1,7 @@
 package io.github.mfaltan.pgcache.core.store;
 
-import io.github.mfaltan.pgcache.common.StoreProperties;
-import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import io.github.mfaltan.pgcache.core.exception.PgCacheStoreFactoryException;
+import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ public class PgCacheStoreFactory implements CacheStoreFactory {
     private final DataSource userWriteDataSource;
     private final String tableName;
     private final CurrentDateTimeProvider timeProvider;
-    private final int defaultTtlSeconds;
 
     @PostConstruct
     public void init() {
@@ -36,8 +34,7 @@ public class PgCacheStoreFactory implements CacheStoreFactory {
     }
 
     @Override
-    public CacheStore initializeStore(String name, StoreProperties storeProperties) {
-        var ttlSeconds = storeProperties != null ? storeProperties.getTtlSeconds() : null;
+    public CacheStore initializeStore(String name) {
 
         String partitionName = tableName + "_" + name;
         log.info(MARKER, "Initializing pg cache partition [{}]", partitionName);
@@ -63,7 +60,6 @@ public class PgCacheStoreFactory implements CacheStoreFactory {
                            .timeProvider(timeProvider)
                            .cacheName(name)
                            .tableName(partitionName)
-                           .ttlSeconds(ttlSeconds != null ? ttlSeconds : defaultTtlSeconds)
                            .build();
     }
 
