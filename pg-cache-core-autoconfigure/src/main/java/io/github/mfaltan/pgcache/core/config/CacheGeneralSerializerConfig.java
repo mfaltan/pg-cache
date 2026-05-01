@@ -3,8 +3,8 @@ package io.github.mfaltan.pgcache.core.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
-import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
-import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,11 +19,12 @@ import org.springframework.context.annotation.Role;
 @Configuration
 @ConditionalOnProperty(
         prefix = "pg-cache",
-        name = "use-universal-serializer",
-        havingValue = "true"
+        name = "custom-serializers",
+        havingValue = "false",
+        matchIfMissing = true
 )
 @Slf4j
-public class CacheSerializerConfig extends AbstractCachingConfiguration {
+public class CacheGeneralSerializerConfig extends AbstractCachingConfiguration {
 
     @Bean("pgCacheInterceptor")
     @Primary
@@ -38,8 +39,8 @@ public class CacheSerializerConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
-    CacheValueSerializer valueSerializer(ObjectMapper objectMapper) {
-        log.info(Constants.MARKER, "Initializing default pg cache Jackson serializer / deserializer");
-        return new PgCacheSerializer(objectMapper);
+    PgCacheGeneralSerializer pgCacheGeneralSerializer(ObjectMapper objectMapper) {
+        log.info(Constants.MARKER, "Initializing general pg cache Jackson serializer / deserializer");
+        return new PgCacheGeneralSerializerImpl(objectMapper);
     }
 }

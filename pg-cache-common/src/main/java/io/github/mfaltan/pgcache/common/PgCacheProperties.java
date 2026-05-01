@@ -16,10 +16,11 @@ public class PgCacheProperties {
     private boolean enabled = false;
 
     /**
-     * PgCache can override default cacheInterceptor - so no specific serializers are needed.
-     * When keep this as false, it is not enabled - and custom serializer implementation is needed
+     * PgCache by default use custom serializing & deserializing, which is fully automatic.
+     * However, it overrides default CacheInterceptor provided by Spring framework.
+     * If this is not acceptable, there is an option to use custom serializers instead
      */
-    private boolean useUniversalSerializer = false;
+    private boolean customSerializers = false;
 
     /**
      * Table name for cache
