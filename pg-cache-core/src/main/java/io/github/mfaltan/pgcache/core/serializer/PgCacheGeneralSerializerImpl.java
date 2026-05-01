@@ -8,22 +8,14 @@ import io.github.mfaltan.pgcache.core.exception.PgCacheDeserializationException;
 import io.github.mfaltan.pgcache.core.exception.PgCacheSerializationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Collection;
 
 @RequiredArgsConstructor
 @Slf4j
-public class PgCacheSerializer implements CacheValueSerializer {
+public class PgCacheGeneralSerializerImpl implements PgCacheGeneralSerializer {
     private final ObjectMapper mapper;
-
-    @Override
-    @Nullable
-    public Collection<String> getCacheNames() {
-        return null;
-    }
 
     @Override
     public byte[] serialize(Object value) {

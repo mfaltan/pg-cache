@@ -1,13 +1,8 @@
 package io.github.mfaltan.pgcache.core.serializer;
 
-import jakarta.annotation.Nullable;
-
 import java.lang.reflect.Type;
-import java.util.Collection;
 
-public interface CacheValueSerializer {
-
-    @Nullable Collection<String> getCacheNames();
+public interface PgCacheGeneralSerializer {
 
     byte[] serialize(Object value);
 

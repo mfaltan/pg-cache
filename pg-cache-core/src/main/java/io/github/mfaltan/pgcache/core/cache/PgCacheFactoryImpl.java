@@ -2,19 +2,17 @@ package io.github.mfaltan.pgcache.core.cache;
 
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
-import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
-
-import java.util.List;
 
 public class PgCacheFactoryImpl extends AbstractPgCacheFactory implements PgCacheFactory {
 
     public PgCacheFactoryImpl(PgCacheStore store,
                               CacheExecutorHolder executorHolder,
-                              List<CacheValueSerializer> serializers,
+                              PgCacheGeneralSerializer generalSerializer,
                               PgCacheProperties properties) {
-        super(store, executorHolder, serializers, properties);
+        super(store, executorHolder, generalSerializer, properties);
     }
 
     @Override
@@ -22,7 +20,7 @@ public class PgCacheFactoryImpl extends AbstractPgCacheFactory implements PgCach
                                   PgCacheStore store,
                                   CacheExecutorHolder executorHolder,
                                   CacheResilience resilience,
-                                  CacheValueSerializer serializer,
+                                  PgCacheGeneralSerializer serializer,
                                   PgCacheProperties properties) {
         return new PgCacheImpl(name, store, executorHolder, resilience, serializer, properties);
     }

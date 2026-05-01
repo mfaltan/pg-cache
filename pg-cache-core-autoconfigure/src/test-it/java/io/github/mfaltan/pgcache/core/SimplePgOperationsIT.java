@@ -6,18 +6,18 @@ import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryImpl;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
-import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerImpl;
 import io.github.mfaltan.pgcache.core.store.PgCacheStoreImpl;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,17 +59,7 @@ class SimplePgOperationsIT {
             assertThat(rs.next()).isTrue();
         }
 
-        var valueSerializer = new PgCacheSerializer(new ObjectMapper());
-        var pgCachePropertes = new PgCacheProperties();
-        pgCachePropertes.setCleanupEnabled(false);
-        pgCachePropertes.setDefaultTtlSeconds(10);
-        var cacheResilienceFactory = new NoOpCacheResilienceFactory();
-        var executorHolder = new PgCacheExecutorHolder(pgCachePropertes.getAsync(), (s) -> (s));
-        var cacheFactory = new PgCacheFactoryImpl(store, executorHolder, List.of(valueSerializer), pgCachePropertes);
-        cacheFactory.init();
-        var cacheManager = new PgCacheManager(cacheFactory, cacheResilienceFactory, pgCachePropertes);
-
-        var cache = cacheManager.getCache("cache1");
+        var cache = getCache(store);
         var type = new TypeReference<SomeValueClass>() {
         }.getType();
         var someKey = KeyEntry.builder()
@@ -97,6 +87,19 @@ class SimplePgOperationsIT {
         storedValue = cache.get(someKey);
         assert storedValue != null;
         assertThat(storedValue.get()).isNull();
+    }
+
+    private static Cache getCache(PgCacheStoreImpl store) {
+        var generalSerializer = new PgCacheGeneralSerializerImpl(new ObjectMapper());
+        var pgCacheProperties = new PgCacheProperties();
+        pgCacheProperties.setCleanupEnabled(false);
+        pgCacheProperties.setDefaultTtlSeconds(10);
+        var cacheResilienceFactory = new NoOpCacheResilienceFactory();
+        var executorHolder = new PgCacheExecutorHolder(pgCacheProperties.getAsync(), (s) -> (s));
+        var cacheFactory = new PgCacheFactoryImpl(store, executorHolder, generalSerializer, pgCacheProperties);
+        var cacheManager = new PgCacheManager(cacheFactory, cacheResilienceFactory, pgCacheProperties);
+
+        return cacheManager.getCache("cache1");
     }
 
     private record SomeValueClass(String field1, Long field2) {

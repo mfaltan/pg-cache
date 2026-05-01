@@ -7,7 +7,8 @@ import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryImpl;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheTaskDecorator;
-import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerNoOp;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.core.store.PgCacheStoreImpl;
 import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
@@ -16,6 +17,7 @@ import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +26,6 @@ import org.springframework.core.task.TaskDecorator;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(PgCacheConfigurationProperties.class)
@@ -56,9 +57,9 @@ public class CacheConfig {
     @ConditionalOnMissingBean
     PgCacheFactory pgCacheFactory(CacheExecutorHolder cacheExecutorHolder,
                                   PgCacheStore pgCacheStore,
-                                  List<CacheValueSerializer> serializers,
+                                  PgCacheGeneralSerializer generalSerializer,
                                   PgCacheConfigurationProperties properties) {
-        return new PgCacheFactoryImpl(pgCacheStore, cacheExecutorHolder, serializers, properties);
+        return new PgCacheFactoryImpl(pgCacheStore, cacheExecutorHolder, generalSerializer, properties);
     }
 
     @Bean("pgCacheManager")
@@ -92,5 +93,16 @@ public class CacheConfig {
                                        @Qualifier("pgCacheTaskDecorator") TaskDecorator taskDecorator) {
         log.info(Constants.MARKER, "Initializing pg cache executor holder");
         return new PgCacheExecutorHolder(properties.getAsync(), taskDecorator);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+            prefix = "pg-cache",
+            name = "custom-serializers",
+            havingValue = "true"
+    )
+    PgCacheGeneralSerializer pgCacheGeneralSerializer() {
+        return new PgCacheGeneralSerializerNoOp();
     }
 }

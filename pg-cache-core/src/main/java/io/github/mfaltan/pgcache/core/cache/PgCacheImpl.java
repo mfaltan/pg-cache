@@ -7,7 +7,7 @@ import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
-import io.github.mfaltan.pgcache.core.serializer.CacheValueSerializer;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import jakarta.annotation.Nonnull;
@@ -22,7 +22,7 @@ public class PgCacheImpl implements PgCache {
     private final PgCacheStore store;
     private final CacheExecutorHolder executorHolder;
     private final CacheResilience resilience;
-    private final CacheValueSerializer serializer;
+    private final PgCacheGeneralSerializer generalSerializer;
     private final PgCacheNoOp cacheNoOp;
     private final int ttlSeconds;
 
@@ -30,13 +30,13 @@ public class PgCacheImpl implements PgCache {
                        PgCacheStore store,
                        CacheExecutorHolder executorHolder,
                        CacheResilience resilience,
-                       CacheValueSerializer serializer,
+                       PgCacheGeneralSerializer generalSerializer,
                        PgCacheProperties properties) {
         this.name = name;
         this.store = store;
         this.executorHolder = executorHolder;
         this.resilience = resilience;
-        this.serializer = serializer;
+        this.generalSerializer = generalSerializer;
         this.cacheNoOp = new PgCacheNoOp(name, PgCacheNoOp.Type.TEMPORARILY);
 
         var prop = properties.getCaches().get(name);
@@ -121,7 +121,7 @@ public class PgCacheImpl implements PgCache {
         CacheEntry data = getCacheEntry(keyEntry);
         if (data == null) return null;
 
-        Object value = serializer.deserialize(data.value(), keyEntry.type());
+        Object value = generalSerializer.deserialize(data.value(), keyEntry.type());
         return () -> value;
     }
 
@@ -130,7 +130,7 @@ public class PgCacheImpl implements PgCache {
         if (data == null) {
             return null;
         } else {
-            return serializer.deserialize(data.value(), type);
+            return generalSerializer.deserialize(data.value(), type);
         }
     }
 
@@ -138,7 +138,7 @@ public class PgCacheImpl implements PgCache {
         byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
 
-        byte[] serializedValue = serializer.serialize(value);
+        byte[] serializedValue = generalSerializer.serialize(value);
 
         var entry = CacheEntry.builder()
                               .normalizedKey(normalizedKey)
@@ -161,7 +161,7 @@ public class PgCacheImpl implements PgCache {
     }
 
     private byte[] normalizeKey(KeyEntry keyEntry) {
-        return serializer.serialize(keyEntry.rawKey());
+        return generalSerializer.serialize(keyEntry.rawKey());
     }
 
     private KeyEntry keyToKeyEntry(Object key) {

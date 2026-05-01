@@ -21,14 +21,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PgCacheSerializerTest {
+class PgCacheGeneralSerializerImplTest {
 
     private static final String VALUE = "test-value";
     private static final byte[] BYTES = new byte[]{1, 2, 3};
     private static final Class<String> CLAZZ = String.class;
 
     @InjectMocks
-    private PgCacheSerializer serializer;
+    private PgCacheGeneralSerializerImpl serializer;
 
     @Mock
     private ObjectMapper mapper;
