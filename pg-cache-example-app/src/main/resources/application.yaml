@@ -1,6 +1,6 @@
 pg-cache:
   enabled: true
-  custom-serializers: false
+  custom-serializers: false # switch to true to test custom serializer
   table-name: cache_data1
   default-ttl-seconds: 30
   cleanup-enabled: true
@@ -10,7 +10,7 @@ pg-cache:
     cache1:
       ttl-seconds: 5
     cache2:
-      disabled: true
+      disabled: true # switch to false to test
 
   async:
     enabled: true

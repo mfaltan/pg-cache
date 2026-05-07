@@ -15,7 +15,7 @@ import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 public class CacheResilienceConfig {
 
 
-    @Bean
+    @Bean("pgCacheResilienceFactory")
     CacheResilienceFactory pgCacheResilienceFactory(CircuitBreakerRegistry circuitBreakerRegistry,
                                                     @Value("${pg-cache.resilience.prefix:pg-cache}") String prefix) {
         log.info(MARKER, "Pg-cache resilience enabled, overriding noOp resilience");

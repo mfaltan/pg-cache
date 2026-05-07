@@ -31,7 +31,6 @@ public class PgCacheManager implements CacheManager {
     private final PgCacheFactory pgCacheFactory;
     private final CacheResilienceFactory cacheResilienceFactory;
     private final PgCacheProperties properties;
-
     private final Map<String, PgCache> caches = new HashMap<>();
 
     @PostConstruct
@@ -47,10 +46,10 @@ public class PgCacheManager implements CacheManager {
         } else {
             var cacheResilience = cacheResilienceFactory.create(name);
             var newCache = cacheResilience.execute(() -> this.getNewCache(name, cacheResilience), () -> new PgCacheNoOp(name, TEMPORARILY));
-            if (!(newCache instanceof PgCacheNoOp)) {
+            if (newCache != null && !(newCache instanceof PgCacheNoOp)) {
                 caches.put(name, newCache);
             }
-            return newCache;
+            return newCache != null ? newCache : new PgCacheNoOp(name, TEMPORARILY);
         }
     }
 
