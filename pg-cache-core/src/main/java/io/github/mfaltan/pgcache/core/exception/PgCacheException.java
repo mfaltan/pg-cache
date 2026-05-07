@@ -5,4 +5,8 @@ public class PgCacheException extends RuntimeException {
     public PgCacheException(String message, Exception cause) {
         super(message, cause);
     }
+
+    public PgCacheException(String message) {
+        super(message);
+    }
 }

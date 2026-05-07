@@ -9,6 +9,7 @@ import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheTaskDecorator;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerNoOp;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerConfiguration;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.core.store.PgCacheStoreImpl;
 import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
@@ -26,6 +27,7 @@ import org.springframework.core.task.TaskDecorator;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Configuration
 @EnableConfigurationProperties(PgCacheConfigurationProperties.class)
@@ -58,8 +60,9 @@ public class CacheConfig {
     PgCacheFactory pgCacheFactory(CacheExecutorHolder cacheExecutorHolder,
                                   PgCacheStore pgCacheStore,
                                   PgCacheGeneralSerializer generalSerializer,
+                                  Map<String, PgCacheSerializerConfiguration> serializerConfigurations,
                                   PgCacheConfigurationProperties properties) {
-        return new PgCacheFactoryImpl(pgCacheStore, cacheExecutorHolder, generalSerializer, properties);
+        return new PgCacheFactoryImpl(pgCacheStore, cacheExecutorHolder, generalSerializer, serializerConfigurations, properties);
     }
 
     @Bean("pgCacheManager")
@@ -74,8 +77,8 @@ public class CacheConfig {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    CacheResilienceFactory cacheResilienceFactory() {
+    @ConditionalOnMissingBean(name = "pgCacheResilienceFactory")
+    CacheResilienceFactory pgCacheResilienceFactory() {
         log.info(Constants.MARKER, "Initializing pg cache noOp resilience factory");
         return new NoOpCacheResilienceFactory();
     }
