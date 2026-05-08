@@ -27,7 +27,6 @@ import org.springframework.core.task.TaskDecorator;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Configuration
 @EnableConfigurationProperties(PgCacheConfigurationProperties.class)
@@ -57,13 +56,20 @@ public class CacheConfig {
 
     @Bean
     @ConditionalOnMissingBean
+    PgCacheSerializerConfiguration pgCacheSerializerConfiguration() {
+        return PgCacheSerializerConfiguration.builder().build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     PgCacheFactory pgCacheFactory(CacheExecutorHolder cacheExecutorHolder,
                                   PgCacheStore pgCacheStore,
                                   PgCacheGeneralSerializer generalSerializer,
-                                  Map<String, PgCacheSerializerConfiguration> serializerConfigurations,
+                                  PgCacheSerializerConfiguration serializerConfigurations,
                                   PgCacheConfigurationProperties properties) {
         return new PgCacheFactoryImpl(pgCacheStore, cacheExecutorHolder, generalSerializer, serializerConfigurations, properties);
     }
+
 
     @Bean("pgCacheManager")
     @ConditionalOnMissingBean(name = "pgCacheManager")
