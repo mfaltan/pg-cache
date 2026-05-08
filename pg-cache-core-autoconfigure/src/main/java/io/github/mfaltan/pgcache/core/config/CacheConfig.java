@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
@@ -71,9 +70,9 @@ public class CacheConfig {
     }
 
 
-    @Bean("pgCacheManager")
-    @ConditionalOnMissingBean(name = "pgCacheManager")
-    CacheManager pgCacheManager(PgCacheFactory pgCacheFactory,
+    @Bean
+    @ConditionalOnMissingBean
+    PgCacheManager pgCacheManager(PgCacheFactory pgCacheFactory,
                                 CacheResilienceFactory cacheResilienceFactory,
                                 PgCacheConfigurationProperties properties) {
 
@@ -83,14 +82,14 @@ public class CacheConfig {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "pgCacheResilienceFactory")
+    @ConditionalOnMissingBean
     CacheResilienceFactory pgCacheResilienceFactory() {
         log.info(Constants.MARKER, "Initializing pg cache noOp resilience factory");
         return new NoOpCacheResilienceFactory();
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "pgCacheTaskDecorator")
+    @ConditionalOnMissingBean
     TaskDecorator pgCacheTaskDecorator() {
         log.info(Constants.MARKER, "Initializing pg cache task decorator");
         return new PgCacheTaskDecorator();
