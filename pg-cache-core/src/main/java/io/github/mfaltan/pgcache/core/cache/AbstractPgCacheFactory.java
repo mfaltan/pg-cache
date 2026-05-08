@@ -2,10 +2,10 @@ package io.github.mfaltan.pgcache.core.cache;
 
 import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
-import io.github.mfaltan.pgcache.core.exception.PgCacheSerializerConfigurationException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerConfiguration;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerPair;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import jakarta.annotation.Nonnull;
@@ -13,8 +13,6 @@ import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-
-import java.util.Map;
 
 import static io.github.mfaltan.pgcache.core.cache.PgCacheNoOp.Type.PERMANENTLY;
 
@@ -25,7 +23,7 @@ public abstract class AbstractPgCacheFactory {
     private final PgCacheStore store;
     private final CacheExecutorHolder executorHolder;
     private final PgCacheGeneralSerializer generalSerializer;
-    private final Map<String, PgCacheSerializerConfiguration> serializerConfigurations;
+    private final PgCacheSerializerConfiguration serializerConfiguration;
     private final PgCacheProperties properties;
 
     public PgCache createCache(String name, CacheResilience cacheResilience) {
@@ -47,7 +45,7 @@ public abstract class AbstractPgCacheFactory {
                                            CacheExecutorHolder cacheExecutorHolder,
                                            CacheResilience cacheResilience,
                                            PgCacheGeneralSerializer generalSerializer,
-                                           PgCacheSerializerConfiguration cacheSerializerConfiguration,
+                                           PgCacheSerializerPair cacheSerializerConfiguration,
                                            PgCacheProperties properties);
 
     protected @Nonnull Boolean isCacheDisabled(@NonNull String name) {
@@ -60,15 +58,11 @@ public abstract class AbstractPgCacheFactory {
                          .orElse(false);
     }
 
-    protected @Nullable PgCacheSerializerConfiguration getSerializerConfiguration(String name) {
+    protected @Nullable PgCacheSerializerPair getSerializerConfiguration(String name) {
         if (!properties.isCustomSerializers()) {
             return null;
         } else {
-            var ret = this.serializerConfigurations.computeIfAbsent(name, (n) -> this.serializerConfigurations.get(null));
-            if (ret == null) {
-                throw new PgCacheSerializerConfigurationException(name);
-            }
-            return ret;
+            return serializerConfiguration.getSerializerPair(name);
         }
     }
 }

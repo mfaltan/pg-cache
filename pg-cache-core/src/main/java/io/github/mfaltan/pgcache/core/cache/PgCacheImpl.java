@@ -9,7 +9,7 @@ import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
-import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerConfiguration;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerPair;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import jakarta.annotation.Nonnull;
@@ -26,7 +26,7 @@ public class PgCacheImpl implements PgCache {
     private final CacheExecutorHolder executorHolder;
     private final CacheResilience resilience;
     private final PgCacheGeneralSerializer generalSerializer;
-    private final PgCacheSerializerConfiguration serializerConfiguration;
+    private final PgCacheSerializerPair serializerPair;
     private final PgCacheNoOp cacheNoOp;
     private final int ttlSeconds;
 
@@ -35,14 +35,14 @@ public class PgCacheImpl implements PgCache {
                        CacheExecutorHolder executorHolder,
                        CacheResilience resilience,
                        PgCacheGeneralSerializer generalSerializer,
-                       PgCacheSerializerConfiguration serializerConfiguration,
+                       PgCacheSerializerPair serializerPair,
                        PgCacheProperties properties) {
         this.name = name;
         this.store = store;
         this.executorHolder = executorHolder;
         this.resilience = resilience;
         this.generalSerializer = generalSerializer;
-        this.serializerConfiguration = serializerConfiguration;
+        this.serializerPair = serializerPair;
         this.cacheNoOp = new PgCacheNoOp(name, PgCacheNoOp.Type.TEMPORARILY);
 
         var prop = properties.getCaches().get(name);
@@ -182,7 +182,7 @@ public class PgCacheImpl implements PgCache {
     private KeyEntry keyToKeyEntry(Object key) {
         if (key instanceof KeyEntry keyEntry) {
             return keyEntry;
-        } else if (this.serializerConfiguration != null) {
+        } else if (this.serializerPair != null) {
             return KeyEntry.builder()
                            .rawKey(key)
                            .type(null)
@@ -202,8 +202,8 @@ public class PgCacheImpl implements PgCache {
     }
 
     private Object deserializeValue(byte[] value, Type type) {
-        if (serializerConfiguration != null) {
-            var ser = serializerConfiguration.getValueSerializer();
+        if (serializerPair != null) {
+            var ser = serializerPair.valueSerializer();
             return ser.deserialize(value);
         } else {
             return generalSerializer.deserialize(value, type);
@@ -212,8 +212,8 @@ public class PgCacheImpl implements PgCache {
 
     @SuppressWarnings("unchecked")
     private <T> T deserializeValue(byte[] value, Class<T> type) {
-        if (serializerConfiguration != null) {
-            var ser = serializerConfiguration.getValueSerializer();
+        if (serializerPair != null) {
+            var ser = serializerPair.valueSerializer();
             return (T) ser.deserialize(value);
         } else {
             return generalSerializer.deserialize(value, type);
@@ -222,8 +222,8 @@ public class PgCacheImpl implements PgCache {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private byte[] serializeValue(Object value) {
-        if (serializerConfiguration != null) {
-            PgCacheSerializer ser = serializerConfiguration.getValueSerializer();
+        if (serializerPair != null) {
+            PgCacheSerializer ser = serializerPair.valueSerializer();
             return ser.serializeValue(value);
         } else {
             return generalSerializer.serialize(value);
@@ -232,8 +232,8 @@ public class PgCacheImpl implements PgCache {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private byte[] serializeKey(Object value) {
-        if (serializerConfiguration != null) {
-            PgCacheSerializer ser = serializerConfiguration.getKeySerializer();
+        if (serializerPair != null) {
+            PgCacheSerializer ser = serializerPair.keySerializer();
             return ser.serializeValue(value);
         } else {
             return generalSerializer.serialize(value);

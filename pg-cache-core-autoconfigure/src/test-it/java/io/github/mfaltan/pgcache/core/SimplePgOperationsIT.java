@@ -7,6 +7,7 @@ import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryImpl;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerImpl;
+import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerConfiguration;
 import io.github.mfaltan.pgcache.core.store.PgCacheStoreImpl;
 import io.github.mfaltan.pgcache.resilience.NoOpCacheResilienceFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 
-import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
@@ -97,7 +97,8 @@ class SimplePgOperationsIT {
         pgCacheProperties.setDefaultTtlSeconds(10);
         var cacheResilienceFactory = new NoOpCacheResilienceFactory();
         var executorHolder = new PgCacheExecutorHolder(pgCacheProperties.getAsync(), (s) -> (s));
-        var cacheFactory = new PgCacheFactoryImpl(store, executorHolder, generalSerializer, emptyMap(), pgCacheProperties);
+        var serializerConfiguration = PgCacheSerializerConfiguration.builder().build();
+        var cacheFactory = new PgCacheFactoryImpl(store, executorHolder, generalSerializer, serializerConfiguration, pgCacheProperties);
         var cacheManager = new PgCacheManager(cacheFactory, cacheResilienceFactory, pgCacheProperties);
 
         return cacheManager.getCache("cache1");
