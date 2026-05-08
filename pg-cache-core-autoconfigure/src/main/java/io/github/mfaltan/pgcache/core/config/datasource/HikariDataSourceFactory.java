@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core.config;
+package io.github.mfaltan.pgcache.core.config.datasource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

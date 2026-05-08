@@ -4,6 +4,8 @@ import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.core.PgCacheManager;
 import io.github.mfaltan.pgcache.core.cache.PgCacheFactory;
 import io.github.mfaltan.pgcache.core.cache.PgCacheFactoryImpl;
+import io.github.mfaltan.pgcache.core.config.datasource.DataSourceHolder;
+import io.github.mfaltan.pgcache.core.config.properties.PgCacheConfigurationProperties;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.executor.PgCacheTaskDecorator;
@@ -24,7 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 
 @Configuration
@@ -44,13 +45,14 @@ public class CacheConfig {
     @Bean
     @ConditionalOnMissingBean
     PgCacheStore pgCacheStore(PgCacheConfigurationProperties properties,
-                              @Qualifier("pgCacheAdminDataSource") DataSource adminDataSource,
-                              @Qualifier("pgCacheUserReadDataSource") DataSource userReadDataSource,
-                              @Qualifier("pgCacheUserWriteDataSource") DataSource userWriteDataSource,
+                              DataSourceHolder dataSourceHolder,
                               CurrentDateTimeProvider currentDateTimeProvider) {
 
         log.info(Constants.MARKER, "Initializing pg cache store");
-        return new PgCacheStoreImpl(userReadDataSource, userWriteDataSource, adminDataSource, currentDateTimeProvider, properties.getTableName());
+        var readDataSource = dataSourceHolder.getReadDataSource();
+        var writeDataSource = dataSourceHolder.getWriteDataSource();
+        var adminDataSource = dataSourceHolder.getAdminDataSource();
+        return new PgCacheStoreImpl(readDataSource, writeDataSource, adminDataSource, currentDateTimeProvider, properties.getTableName());
     }
 
     @Bean

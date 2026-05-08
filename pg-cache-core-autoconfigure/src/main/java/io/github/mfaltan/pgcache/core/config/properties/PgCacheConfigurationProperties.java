@@ -1,4 +1,4 @@
-package io.github.mfaltan.pgcache.core.config;
+package io.github.mfaltan.pgcache.core.config.properties;
 
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import lombok.Getter;
