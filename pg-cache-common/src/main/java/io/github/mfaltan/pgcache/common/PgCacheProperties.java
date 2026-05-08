@@ -50,12 +50,9 @@ public class PgCacheProperties {
      */
     private String traceIdKey = "traceId";
 
-    /**
-     * Admin datasource (DDL, schema management)
-     */
+    private final DataSourceProperties dataSource = new DataSourceProperties();
+    private final DataSourceProperties writeDataSource = new DataSourceProperties();
     private final DataSourceProperties adminDatasource = new DataSourceProperties();
-    private final DataSourceProperties userReadDataSource = new DataSourceProperties();
-    private final DataSourceProperties userWriteDataSource = new DataSourceProperties();
 
     @Getter
     @Setter

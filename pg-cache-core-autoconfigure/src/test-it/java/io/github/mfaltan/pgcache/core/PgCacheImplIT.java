@@ -27,17 +27,18 @@ public class PgCacheImplIT {
 
         registry.add("pg-cache.enabled", () -> true);
         registry.add("pg-cache.use-universal-serializer", () -> true);
+
+        registry.add("pg-cache.datasource.url", postgres::getJdbcUrl);
+        registry.add("pg-cache.datasource.username", postgres::getUsername);
+        registry.add("pg-cache.datasource.password", postgres::getPassword);
+
+        registry.add("pg-cache.write-datasource.url", postgres::getJdbcUrl);
+        registry.add("pg-cache.write-datasource.username", postgres::getUsername);
+        registry.add("pg-cache.write-datasource.password", postgres::getPassword);
+
         registry.add("pg-cache.admin-datasource.url", postgres::getJdbcUrl);
         registry.add("pg-cache.admin-datasource.username", postgres::getUsername);
         registry.add("pg-cache.admin-datasource.password", postgres::getPassword);
-
-        registry.add("pg-cache.user-read-datasource.url", postgres::getJdbcUrl);
-        registry.add("pg-cache.user-read-datasource.username", postgres::getUsername);
-        registry.add("pg-cache.user-read-datasource.password", postgres::getPassword);
-
-        registry.add("pg-cache.user-write-datasource.url", postgres::getJdbcUrl);
-        registry.add("pg-cache.user-write-datasource.username", postgres::getUsername);
-        registry.add("pg-cache.user-write-datasource.password", postgres::getPassword);
 
         registry.add("pg-cache.default-ttl-seconds", () -> 60);
     }
