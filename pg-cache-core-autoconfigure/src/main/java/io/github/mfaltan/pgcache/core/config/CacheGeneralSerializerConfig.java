@@ -7,6 +7,7 @@ import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.AbstractCachingConfiguration;
 import org.springframework.cache.interceptor.CacheInterceptor;
@@ -39,6 +40,7 @@ public class CacheGeneralSerializerConfig extends AbstractCachingConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     PgCacheGeneralSerializer pgCacheGeneralSerializer(ObjectMapper objectMapper) {
         log.info(Constants.MARKER, "Initializing general pg cache Jackson serializer / deserializer");
         return new PgCacheGeneralSerializerImpl(objectMapper);
