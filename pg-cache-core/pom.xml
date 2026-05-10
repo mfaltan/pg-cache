@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.mfaltan</groupId>
         <artifactId>pg-cache-sb3-parent</artifactId>
-        <version>0.4.0-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pg-cache-sb3-parent/pom.xml</relativePath>
     </parent>
 
