@@ -32,6 +32,7 @@
 
         <!-- examples -->
         <module>pg-cache-example-app</module>
+        <module>pg-cache-performance-test</module>
 
     </modules>
 
