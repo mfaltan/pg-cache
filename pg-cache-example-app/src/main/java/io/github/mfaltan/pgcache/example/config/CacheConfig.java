@@ -17,6 +17,11 @@ import org.springframework.context.annotation.Primary;
 public class CacheConfig {
 
     @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
+    }
+
+    @Bean
     @Primary
     CacheManager simpleCacheManager() {
         return new ConcurrentMapCacheManager(Constants.CACHE_3);
