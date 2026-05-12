@@ -33,6 +33,16 @@ public class PgCacheProperties {
     private int defaultTtlSeconds = 30 * 60;
 
     /**
+     * Async get timeout in seconds
+     */
+    private int asyncGetTimeout = 5;
+
+    /**
+     * Async get with loader timeout in seconds
+     */
+    private int asyncGetWithLoaderTimeout = 30;
+
+    /**
      * Default cleanup setup
      */
     private boolean cleanupEnabled = false;

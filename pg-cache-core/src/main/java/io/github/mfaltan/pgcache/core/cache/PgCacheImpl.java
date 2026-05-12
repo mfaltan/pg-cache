@@ -17,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Slf4j
 public class PgCacheImpl implements PgCache {
@@ -28,6 +31,8 @@ public class PgCacheImpl implements PgCache {
     private final PgCacheSerializerPair serializerPair;
     private final PgCacheNoOp cacheNoOp;
     private final int ttlSeconds;
+    private final int asyncGetTimeout;
+    private final int asyncGetWithLoaderTimeout;
 
     public PgCacheImpl(String name,
                        PgCacheStore store,
@@ -46,6 +51,9 @@ public class PgCacheImpl implements PgCache {
 
         var prop = properties.getCaches().get(name);
         this.ttlSeconds = prop != null && prop.getTtlSeconds() != null ? prop.getTtlSeconds() : properties.getDefaultTtlSeconds();
+        this.asyncGetTimeout = properties.getAsyncGetTimeout();
+        this.asyncGetWithLoaderTimeout = properties.getAsyncGetWithLoaderTimeout();
+
     }
 
     public PgCacheImpl(String name,
@@ -122,6 +130,17 @@ public class PgCacheImpl implements PgCache {
         var executor = executorHolder.getClearExecutor();
         log.debug(Constants.MARKER, "About to clear cache [{}]", name);
         executor.execute(() -> resilience.execute(() -> store.clear(name), cacheNoOp::clear));
+    }
+
+    @Override
+    public CompletableFuture<?> retrieve(Object key) {
+        return CompletableFuture.runAsync(() -> get(key)).orTimeout(asyncGetTimeout, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public <T> CompletableFuture<T> retrieve(Object key, Supplier<CompletableFuture<T>> valueLoader) {
+        Callable<T> valueCallable = () -> valueLoader.get().get();
+        return CompletableFuture.supplyAsync(() -> get(key, valueCallable)).orTimeout(asyncGetWithLoaderTimeout, TimeUnit.SECONDS);
     }
 
     @Override
