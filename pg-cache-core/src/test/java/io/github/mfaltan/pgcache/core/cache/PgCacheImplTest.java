@@ -6,7 +6,6 @@ import com.google.common.hash.Hashing;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
-import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache.ValueRetrievalException;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
@@ -305,7 +305,7 @@ class PgCacheImplTest {
 
             // WHEN + THEN
             assertThatThrownBy(() -> cache.get(someKey, loader))
-                    .isInstanceOf(PgCacheCallerException.class)
+                    .isInstanceOf(ValueRetrievalException.class)
                     .hasCause(e);
         }
     }
