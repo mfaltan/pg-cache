@@ -1,7 +1,6 @@
 package io.github.mfaltan.pgcache.core.cache;
 
 import io.github.mfaltan.pgcache.common.Constants;
-import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import jakarta.annotation.Nonnull;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +46,7 @@ public class PgCacheNoOp implements PgCache {
             log.debug(Constants.MARKER, "Cache [{}] [{}] disabled, not getting value for key [{}], directly calling valueLoader", name, type, key);
             return valueLoader.call();
         } catch (Exception e) {
-            throw new PgCacheCallerException(e);
+            throw new ValueRetrievalException(key, valueLoader, e);
         }
     }
 

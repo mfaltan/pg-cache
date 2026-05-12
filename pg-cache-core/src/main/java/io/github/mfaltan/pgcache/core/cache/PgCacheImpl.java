@@ -5,7 +5,6 @@ import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
-import io.github.mfaltan.pgcache.core.exception.PgCacheCallerException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
@@ -95,7 +94,7 @@ public class PgCacheImpl implements PgCache {
             log.debug(Constants.MARKER, "About to call loader for key [{}] and cache [{}]", key, name);
             value = valueLoader.call();
         } catch (Exception e) {
-            throw new PgCacheCallerException(e);
+            throw new ValueRetrievalException(key, valueLoader, e);
         }
         put(key, value);
         return value;
