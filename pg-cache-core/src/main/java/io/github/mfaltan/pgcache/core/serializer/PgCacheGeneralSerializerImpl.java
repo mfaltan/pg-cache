@@ -32,7 +32,7 @@ public class PgCacheGeneralSerializerImpl implements PgCacheGeneralSerializer {
         try {
             log.debug(Constants.MARKER, "Deserializing bytes to class [{}]", type);
             var ret = type != null ? mapper.readValue(bytes, type) : null;
-            log.trace(Constants.MARKER, "Deserialized to [{}]", ret);
+            log.debug(Constants.MARKER, "Deserialized to [{}]", ret);
             return ret;
         } catch (IOException e) {
             throw new PgCacheDeserializationException(e);

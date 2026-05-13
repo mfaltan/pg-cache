@@ -2,7 +2,7 @@ package io.github.mfaltan.pgcache.core.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.mfaltan.pgcache.common.Constants;
-import io.github.mfaltan.pgcache.core.PgCacheInterceptor;
+import io.github.mfaltan.pgcache.core.interceptor.PgCacheInterceptor;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializerImpl;
 import lombok.extern.slf4j.Slf4j;

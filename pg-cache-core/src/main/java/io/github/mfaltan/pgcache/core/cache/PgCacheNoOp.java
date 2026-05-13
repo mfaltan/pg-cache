@@ -2,14 +2,14 @@ package io.github.mfaltan.pgcache.core.cache;
 
 import io.github.mfaltan.pgcache.common.Constants;
 import jakarta.annotation.Nonnull;
-import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Callable;
 
-@Builder
 @RequiredArgsConstructor
+@EqualsAndHashCode
 @Slf4j
 public class PgCacheNoOp implements PgCache {
 

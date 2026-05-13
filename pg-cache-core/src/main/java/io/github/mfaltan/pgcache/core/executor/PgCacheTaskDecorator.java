@@ -9,7 +9,8 @@ import java.util.Map;
 public class PgCacheTaskDecorator implements TaskDecorator {
 
     @Override
-    @Nonnull public Runnable decorate(@Nonnull Runnable runnable) {
+    @Nonnull
+    public Runnable decorate(@Nonnull Runnable runnable) {
 
         Map<String, String> context = MDC.getCopyOfContextMap();
 

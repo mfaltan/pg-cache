@@ -15,7 +15,10 @@ public class PgCacheSerializerConfiguration {
     }
 
     public PgCacheSerializerPair getSerializerPair(String name) {
-        var ret = this.serializerPairMap.computeIfAbsent(name, (n) -> this.serializerPairMap.get(null));
+        var ret = this.serializerPairMap.get(name);
+        if (ret == null) {
+            ret = this.serializerPairMap.get(null);
+        }
         if (ret == null) {
             throw new PgCacheSerializerConfigurationException(name);
         }

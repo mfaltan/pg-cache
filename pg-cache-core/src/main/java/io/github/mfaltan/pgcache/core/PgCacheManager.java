@@ -18,11 +18,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
 import static io.github.mfaltan.pgcache.core.cache.PgCacheNoOp.Type.TEMPORARILY;
+import static java.util.Collections.unmodifiableSet;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,7 +31,8 @@ public class PgCacheManager implements CacheManager {
     private final PgCacheFactory pgCacheFactory;
     private final CacheResilienceFactory cacheResilienceFactory;
     private final PgCacheProperties properties;
-    private final Map<String, PgCache> caches = new HashMap<>();
+
+    protected final Map<String, PgCache> caches = new HashMap<>();
 
     @PostConstruct
     public void init() {
@@ -53,21 +54,10 @@ public class PgCacheManager implements CacheManager {
         }
     }
 
-    private PgCache getNewCache(String name, CacheResilience cacheResilience) {
-        // this is executed behind circuit breaker, if there is some issue with storage, alternate circuit will be opened and it will not get here
-        synchronized (this) {
-            if (caches.containsKey(name)) {
-                log.debug(Constants.MARKER, "Using already existing cache [{}], it was created in the meantime", name);
-                return caches.get(name);
-            }
-            return pgCacheFactory.createCache(name, cacheResilience);
-        }
-    }
-
     @Override
     @Nonnull
     public Collection<String> getCacheNames() {
-        return new HashSet<>(caches.keySet());
+        return unmodifiableSet(caches.keySet());
     }
 
     @Scheduled(cron = "${pg-cache.cleanup-cron:0 */30 * * * *}")
@@ -82,6 +72,17 @@ public class PgCacheManager implements CacheManager {
             caches.values().forEach(c -> c.evictExpired(properties.getCleanupLimit()));
         } finally {
             MDC.clear();
+        }
+    }
+
+    private PgCache getNewCache(String name, CacheResilience cacheResilience) {
+        // this is executed behind circuit breaker, if there is some issue with storage, alternate circuit will be opened and it will not get here
+        synchronized (this) {
+            if (caches.containsKey(name)) {
+                log.debug(Constants.MARKER, "Using already existing cache [{}], it was created in the meantime", name);
+                return caches.get(name);
+            }
+            return pgCacheFactory.createCache(name, cacheResilience);
         }
     }
 }

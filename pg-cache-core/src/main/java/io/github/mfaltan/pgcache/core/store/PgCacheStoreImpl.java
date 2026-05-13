@@ -7,7 +7,6 @@ import io.github.mfaltan.pgcache.core.exception.PgCacheStoreException;
 import io.github.mfaltan.pgcache.core.util.CurrentDateTimeProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
@@ -20,7 +19,6 @@ import java.sql.Timestamp;
 import static io.github.mfaltan.pgcache.common.Constants.MARKER;
 
 @Slf4j
-@RequiredArgsConstructor
 @EqualsAndHashCode
 public class PgCacheStoreImpl implements PgCacheStore {
 
@@ -30,11 +28,17 @@ public class PgCacheStoreImpl implements PgCacheStore {
     private final CurrentDateTimeProvider timeProvider;
     private final String tableName;
 
-    private String tableNameWithSuffix;
+    public PgCacheStoreImpl(DataSource readDataSource, DataSource writeDataSource, DataSource adminDataSource, CurrentDateTimeProvider timeProvider, String tableName) {
+        this.readDataSource = readDataSource;
+        this.writeDataSource = writeDataSource;
+        this.adminDataSource = adminDataSource;
+        this.timeProvider = timeProvider;
+        this.tableName = tableName; //add suffix when there is DB breaking change
+    }
+
 
     @PostConstruct
     public void init() throws SQLException {
-        tableNameWithSuffix = tableName; //subject for change in case of breaking changes
         initMainTable();
     }
 
@@ -194,12 +198,12 @@ public class PgCacheStoreImpl implements PgCacheStore {
                     expires_at TIMESTAMP NOT NULL,
                     PRIMARY KEY (name, key)
                 )  PARTITION BY LIST (name)
-                """.formatted(tableNameWithSuffix);
+                """.formatted(tableName);
 
         String indexSql = """
                 CREATE INDEX IF NOT EXISTS idx_%s_expires_at
                 ON %s (expires_at)
-                """.formatted(tableNameWithSuffix, tableNameWithSuffix);
+                """.formatted(tableName, tableName);
 
         try (Connection conn = adminDataSource.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -219,7 +223,7 @@ public class PgCacheStoreImpl implements PgCacheStore {
                 CREATE UNLOGGED TABLE IF NOT EXISTS %s
                 PARTITION OF %s
                 FOR VALUES IN ('%s')
-                """.formatted(partitionName, tableNameWithSuffix, name);
+                """.formatted(partitionName, tableName, name);
 
         try (Connection conn = adminDataSource.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -231,6 +235,6 @@ public class PgCacheStoreImpl implements PgCacheStore {
     }
 
     private String getPartitionName(String name) {
-        return tableNameWithSuffix + "_" + name;
+        return tableName + "_" + name;
     }
 }
