@@ -28,7 +28,8 @@ public record CacheEntry (
     }
 
     @Override
-    @Nonnull public String toString() {
+    @Nonnull
+    public String toString() {
         return "CacheEntry{" +
                 "normalizedKey=" + Arrays.toString(normalizedKey) +
                 ", value=" + Arrays.toString(value) +

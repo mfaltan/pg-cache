@@ -15,10 +15,10 @@ import java.util.concurrent.Executor;
 @RequiredArgsConstructor
 public class PgCacheExecutorHolder implements CacheExecutorHolder {
 
+    private static final Executor SYNC_EXECUTOR = Runnable::run;
+
     private final AsyncProperties asyncProperties;
     private final TaskDecorator taskDecorator;
-
-    private static final Executor SYNC_EXECUTOR = Runnable::run;
 
     private ThreadPoolTaskExecutor writeExecutor;
     private ThreadPoolTaskExecutor clearExecutor;
@@ -37,12 +37,12 @@ public class PgCacheExecutorHolder implements CacheExecutorHolder {
     public void destroy() {
         if (writeExecutor != null) {
             log.info(Constants.MARKER, "Shutting down write executor service");
-            writeExecutor.shutdown();
+            shutdownExecutor(writeExecutor);
         }
 
         if (clearExecutor != null) {
             log.info(Constants.MARKER, "Shutting down clear executor service");
-            clearExecutor.shutdown();
+            shutdownExecutor(clearExecutor);
         }
     }
 
@@ -73,8 +73,20 @@ public class PgCacheExecutorHolder implements CacheExecutorHolder {
         ex.setCorePoolSize(threads);
         ex.setMaxPoolSize(threads);
         ex.setQueueCapacity(queue);
-        ex.setTaskDecorator(taskDecorator);
-        ex.initialize();
+        setTaskDecorator(ex);
+        initializeExecutor(ex);
         return ex;
+    }
+
+    protected void setTaskDecorator(ThreadPoolTaskExecutor ex) {
+        ex.setTaskDecorator(taskDecorator);
+    }
+
+    protected void initializeExecutor(ThreadPoolTaskExecutor ex) {
+        ex.initialize();
+    }
+
+    protected void shutdownExecutor(ThreadPoolTaskExecutor ex) {
+        ex.shutdown();
     }
 }

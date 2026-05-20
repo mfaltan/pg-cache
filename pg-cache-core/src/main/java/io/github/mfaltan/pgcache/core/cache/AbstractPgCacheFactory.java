@@ -34,9 +34,9 @@ public abstract class AbstractPgCacheFactory {
             return new PgCacheNoOp(name, PERMANENTLY);
         } else {
             log.debug(Constants.MARKER, "Creating new cache [{}]", name);
-            var cacheSerializerConfiguration = getSerializerConfiguration(name);
+            var cacheSerializerPair = getSerializerConfiguration(name);
             store.initCache(name);
-            return createCache(name, store, executorHolder, cacheResilience, generalSerializer, cacheSerializerConfiguration, properties);
+            return createCache(name, store, executorHolder, cacheResilience, generalSerializer, cacheSerializerPair, properties);
         }
     }
 
@@ -45,7 +45,7 @@ public abstract class AbstractPgCacheFactory {
                                            CacheExecutorHolder cacheExecutorHolder,
                                            CacheResilience cacheResilience,
                                            PgCacheGeneralSerializer generalSerializer,
-                                           PgCacheSerializerPair cacheSerializerConfiguration,
+                                           PgCacheSerializerPair cacheSerializerPair,
                                            PgCacheProperties properties);
 
     protected @Nonnull Boolean isCacheDisabled(@NonNull String name) {

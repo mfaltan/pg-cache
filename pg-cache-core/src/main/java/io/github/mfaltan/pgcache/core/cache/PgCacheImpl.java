@@ -5,6 +5,7 @@ import io.github.mfaltan.pgcache.common.Constants;
 import io.github.mfaltan.pgcache.common.PgCacheProperties;
 import io.github.mfaltan.pgcache.core.domain.CacheEntry;
 import io.github.mfaltan.pgcache.core.domain.KeyEntry;
+import io.github.mfaltan.pgcache.core.exception.PgCacheKeyException;
 import io.github.mfaltan.pgcache.core.executor.CacheExecutorHolder;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheGeneralSerializer;
 import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializer;
@@ -12,6 +13,7 @@ import io.github.mfaltan.pgcache.core.serializer.PgCacheSerializerPair;
 import io.github.mfaltan.pgcache.core.store.PgCacheStore;
 import io.github.mfaltan.pgcache.resilience.CacheResilience;
 import jakarta.annotation.Nonnull;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Type;
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Slf4j
+@EqualsAndHashCode
 public class PgCacheImpl implements PgCache {
     private final String name;
     private final PgCacheStore store;
@@ -56,15 +59,6 @@ public class PgCacheImpl implements PgCache {
 
     }
 
-    public PgCacheImpl(String name,
-                       PgCacheStore store,
-                       CacheExecutorHolder executorHolder,
-                       CacheResilience resilience,
-                       PgCacheGeneralSerializer generalSerializer,
-                       PgCacheProperties properties) {
-        this(name, store, executorHolder, resilience, generalSerializer, null, properties);
-    }
-
     @Override
     @Nonnull
     public String getName() {
@@ -80,13 +74,13 @@ public class PgCacheImpl implements PgCache {
     @Override
     public ValueWrapper get(@Nonnull Object key) {
         var keyEntry = keyToKeyEntry(key);
-        return resilience.execute(() -> getInternal(keyEntry), () -> cacheNoOp.get(key));
+        return resilience.execute(() -> getInternal(keyEntry), () -> getCacheNoOp().get(key));
     }
 
     @Override
     public <T> T get(@Nonnull Object key, Class<T> type) {
         var keyEntry = keyToKeyEntry(key);
-        return resilience.execute(() -> getInternal(keyEntry, type), () -> cacheNoOp.get(key, type));
+        return resilience.execute(() -> getInternal(keyEntry, type), () -> getCacheNoOp().get(key, type));
     }
 
     @Override
@@ -113,8 +107,7 @@ public class PgCacheImpl implements PgCache {
         var keyEntry = keyToKeyEntry(key);
         var executor = executorHolder.getWriteExecutor();
         log.debug(Constants.MARKER, "About to put value with key [{}] to cache [{}]", key, name);
-        executor.execute(() -> resilience.execute(() -> putInternal(keyEntry, value), () -> cacheNoOp.put(key, value)));
-
+        executor.execute(() -> resilience.execute(() -> putInternal(keyEntry, value), () -> getCacheNoOp().put(key, value)));
     }
 
     @Override
@@ -122,19 +115,19 @@ public class PgCacheImpl implements PgCache {
         var keyEntry = keyToKeyEntry(key);
         var executor = executorHolder.getWriteExecutor();
         log.debug(Constants.MARKER, "About to evict value with key [{}] from cache [{}]", key, name);
-        executor.execute(() -> resilience.execute(() -> evictInternal(keyEntry), () -> cacheNoOp.evict(key)));
+        executor.execute(() -> resilience.execute(() -> evictInternal(keyEntry), () -> getCacheNoOp().evict(key)));
     }
 
     @Override
     public void clear() {
         var executor = executorHolder.getClearExecutor();
         log.debug(Constants.MARKER, "About to clear cache [{}]", name);
-        executor.execute(() -> resilience.execute(() -> store.clear(name), cacheNoOp::clear));
+        executor.execute(() -> resilience.execute(() -> store.clear(name), getCacheNoOp()::clear));
     }
 
     @Override
     public CompletableFuture<?> retrieve(Object key) {
-        return CompletableFuture.runAsync(() -> get(key)).orTimeout(asyncGetTimeout, TimeUnit.SECONDS);
+        return CompletableFuture.supplyAsync(() -> get(key)).orTimeout(asyncGetTimeout, TimeUnit.SECONDS);
     }
 
     @Override
@@ -147,27 +140,31 @@ public class PgCacheImpl implements PgCache {
     public void evictExpired(int limit) {
         var executor = executorHolder.getWriteExecutor();
         log.debug(Constants.MARKER, "About to evict expired from cache [{}]", name);
-        executor.execute(() -> resilience.execute(() -> store.evictExpired(limit, name), () -> cacheNoOp.evict(limit)));
+        executor.execute(() -> resilience.execute(() -> store.evictExpired(limit, name), () -> getCacheNoOp().evictExpired(limit)));
     }
 
-    private ValueWrapper getInternal(KeyEntry keyEntry) {
-        CacheEntry data = getCacheEntry(keyEntry);
-        if (data == null) return null;
-
-        Object value = deserializeValue(data.value(), keyEntry.type());
-        return () -> value;
-    }
-
-    private <T> T getInternal(KeyEntry keyEntry, Class<T> type) {
+    protected ValueWrapper getInternal(KeyEntry keyEntry) {
         CacheEntry data = getCacheEntry(keyEntry);
         if (data == null) {
+            return null;
+        } else if (data.value() == null) {
+            return () -> null;
+        } else {
+            Object value = deserializeValue(data.value(), keyEntry.type());
+            return () -> value;
+        }
+    }
+
+    protected <T> T getInternal(KeyEntry keyEntry, Class<T> type) {
+        CacheEntry data = getCacheEntry(keyEntry);
+        if (data == null || data.value() == null) {
             return null;
         } else {
             return deserializeValue(data.value(), type);
         }
     }
 
-    private void putInternal(KeyEntry keyEntry, Object value) {
+    protected void putInternal(KeyEntry keyEntry, Object value) {
         byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
 
@@ -181,23 +178,17 @@ public class PgCacheImpl implements PgCache {
         store.put(longKey, entry, ttlSeconds, name);
     }
 
-    private void evictInternal(KeyEntry keyEntry) {
+    protected void evictInternal(KeyEntry keyEntry) {
         byte[] normalizedKey = normalizeKey(keyEntry);
         Long longKey = generateKey(normalizedKey);
         store.remove(longKey, name);
     }
 
-    private Long generateKey(byte[] normalizedKey) {
-        return Hashing.murmur3_128()
-                      .hashBytes(normalizedKey)
-                      .asLong();
+    protected PgCacheNoOp getCacheNoOp() {
+        return cacheNoOp;
     }
 
-    private byte[] normalizeKey(KeyEntry keyEntry) {
-        return serializeKey(keyEntry.rawKey());
-    }
-
-    private KeyEntry keyToKeyEntry(Object key) {
+    protected KeyEntry keyToKeyEntry(Object key) {
         if (key instanceof KeyEntry keyEntry) {
             return keyEntry;
         } else if (this.serializerPair != null) {
@@ -206,11 +197,21 @@ public class PgCacheImpl implements PgCache {
                            .type(null)
                            .build();
         } else {
-            throw new IllegalArgumentException("Provided key is not KeyEntry");
+            throw new PgCacheKeyException(key);
         }
     }
 
-    private CacheEntry getCacheEntry(KeyEntry key) {
+    protected Long generateKey(byte[] normalizedKey) {
+        return Hashing.murmur3_128()
+                      .hashBytes(normalizedKey)
+                      .asLong();
+    }
+
+    protected byte[] normalizeKey(KeyEntry keyEntry) {
+        return serializeKey(keyEntry.rawKey());
+    }
+
+    protected CacheEntry getCacheEntry(KeyEntry key) {
         byte[] normalizedKey = normalizeKey(key);
         Long longKey = generateKey(normalizedKey);
 
@@ -219,17 +220,8 @@ public class PgCacheImpl implements PgCache {
         return data;
     }
 
-    private Object deserializeValue(byte[] value, Type type) {
-        if (serializerPair != null) {
-            var ser = serializerPair.valueSerializer();
-            return ser.deserialize(value);
-        } else {
-            return generalSerializer.deserialize(value, type);
-        }
-    }
-
     @SuppressWarnings("unchecked")
-    private <T> T deserializeValue(byte[] value, Class<T> type) {
+    protected <T> T deserializeValue(byte[] value, Type type) {
         if (serializerPair != null) {
             var ser = serializerPair.valueSerializer();
             return (T) ser.deserialize(value);
@@ -239,7 +231,7 @@ public class PgCacheImpl implements PgCache {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private byte[] serializeValue(Object value) {
+    protected byte[] serializeValue(Object value) {
         if (serializerPair != null) {
             PgCacheSerializer ser = serializerPair.valueSerializer();
             return ser.serializeValue(value);
@@ -249,7 +241,7 @@ public class PgCacheImpl implements PgCache {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private byte[] serializeKey(Object value) {
+    protected byte[] serializeKey(Object value) {
         if (serializerPair != null) {
             PgCacheSerializer ser = serializerPair.keySerializer();
             return ser.serializeValue(value);
